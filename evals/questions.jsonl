@@ -1,0 +1,20 @@
+{"id": 1, "query": "How do I get started with CSBrainAI?", "expected_keywords": ["environment", "install", "dependencies"]}
+{"id": 2, "query": "What is CSBrainAI?", "expected_keywords": ["RAG", "retrieval", "generation", "AI"]}
+{"id": 3, "query": "Is my data private?", "expected_keywords": ["privacy", "hash", "PII"]}
+{"id": 4, "query": "How do I use the API?", "expected_keywords": ["POST", "/api/answer", "query"]}
+{"id": 5, "query": "What file formats are supported for ingestion?", "expected_keywords": ["md", "txt", "markdown"]}
+{"id": 6, "query": "What is the rate limit?", "expected_keywords": ["10", "minute", "requests"]}
+{"id": 7, "query": "How does vector search work?", "expected_keywords": ["embedding", "chunk", "similarity"]}
+{"id": 8, "query": "What embedding model do you use?", "expected_keywords": ["text-embedding-3-small", "OpenAI", "1536"]}
+{"id": 9, "query": "What LLM model generates answers?", "expected_keywords": ["gpt-4o-mini", "OpenAI"]}
+{"id": 10, "query": "How fast are queries?", "expected_keywords": ["second", "latency", "ms"]}
+{"id": 11, "query": "How do I add new documents?", "expected_keywords": ["data", "ingest", "npm run"]}
+{"id": 12, "query": "Where can I deploy CSBrainAI?", "expected_keywords": ["Vercel", "Node.js", "hosting"]}
+{"id": 13, "query": "Do I need Upstash Redis?", "expected_keywords": ["optional", "rate limiting", "memory"]}
+{"id": 14, "query": "How do I set up Sentry?", "expected_keywords": ["sentry.io", "DSN", "SENTRY_DSN"]}
+{"id": 15, "query": "How do I migrate the database?", "expected_keywords": ["migration", "SQL", "Supabase"]}
+{"id": 16, "query": "What if ingest fails?", "expected_keywords": ["SUPABASE_SERVICE_ROLE", "key", "error"]}
+{"id": 17, "query": "How can I make queries faster?", "expected_keywords": ["cache", "Edge", "latency", "top-k"]}
+{"id": 18, "query": "How can I reduce costs?", "expected_keywords": ["cache", "gpt-4o-mini", "batch"]}
+{"id": 19, "query": "Can I scale to millions of documents?", "expected_keywords": ["ivfflat", "Pro tier", "sharding"]}
+{"id": 20, "query": "What's on the roadmap?", "expected_keywords": ["hybrid", "streaming", "PDF", "feedback"]}

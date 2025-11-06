@@ -1,0 +1,67 @@
+name: Nightly Evals
+
+on:
+  schedule:
+    # Run at 2 AM UTC every day
+    - cron: '0 2 * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  run-evals:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run evaluation tests
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          HASH_SALT: ${{ secrets.HASH_SALT }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.NEXT_PUBLIC_SENTRY_DSN }}
+        run: |
+          # Start Next.js server in background
+          npm run build
+          npm run start &
+          SERVER_PID=$!
+
+          # Wait for server to be ready
+          echo "Waiting for server to start..."
+          timeout 60 bash -c 'until curl -f http://localhost:3000/api/answer -X POST -H "Content-Type: application/json" -d "{\"query\":\"test\"}" 2>/dev/null; do sleep 2; done'
+
+          # Run evals
+          node scripts/evals-runner.js
+          EVAL_EXIT_CODE=$?
+
+          # Stop server
+          kill $SERVER_PID
+
+          # Exit with eval exit code
+          exit $EVAL_EXIT_CODE
+
+      - name: Upload eval results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-results-${{ github.run_number }}
+          path: eval-results.json
+          retention-days: 90
+
+      - name: Comment on failure
+        if: failure()
+        run: |
+          echo "❌ Nightly evals failed. Check artifacts for details."
+          echo "This is a soft failure - it won't block deployments."

@@ -1,0 +1,40 @@
+{
+  "name": "csbrainai",
+  "version": "1.0.0",
+  "description": "Production-grade RAG system with Supabase pgvector and Sentry observability",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit",
+    "ingest": "tsx scripts/ingest.ts",
+    "evals": "node scripts/evals-runner.js",
+    "db:migrate": "psql $SUPABASE_URL < supabase/migrations/001_init_rag.sql"
+  },
+  "dependencies": {
+    "@sentry/nextjs": "^8.37.1",
+    "@supabase/supabase-js": "^2.45.6",
+    "next": "^14.2.18",
+    "openai": "^4.73.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^9.14.0",
+    "eslint-config-next": "^14.2.18",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.15",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}
