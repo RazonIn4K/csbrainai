@@ -1,0 +1,99 @@
+diff --git a/lib/rate-limiter.ts b/lib/rate-limiter.ts
+index 6e002f4..624c83a 100644
+--- a/lib/rate-limiter.ts
++++ b/lib/rate-limiter.ts
+@@ -126,6 +126,14 @@ export async function rateLimit(
+   } catch (error) {
+     // Fall back to token bucket
+     console.warn('Upstash rate limiter unavailable, using token bucket fallback');
++
++    // In production, log to monitoring (this fallback won't work properly in serverless)
++    if (process.env.NODE_ENV === 'production') {
++      console.error('⚠️ WARNING: In-memory rate limiter active in production. ' +
++        'This will not work correctly across distributed serverless instances. ' +
++        'Please configure Upstash Redis for production use.');
++    }
++
+     const result = tokenBucketLimit(identifier);
+     return {
+       success: result.success,
+diff --git a/package.json b/package.json
+index 41670aa..8528bf2 100644
+--- a/package.json
++++ b/package.json
+@@ -9,6 +9,9 @@
+     "lint": "next lint",
+     "ingest": "tsx scripts/ingest.ts",
+     "evals": "tsx scripts/evals-runner.ts",
++    "test": "jest",
++    "test:watch": "jest --watch",
++    "test:coverage": "jest --coverage",
+     "type-check": "tsc --noEmit"
+   },
+   "dependencies": {
+@@ -20,11 +23,15 @@
+     "react-dom": "^18.3.1"
+   },
+   "devDependencies": {
++    "@jest/globals": "^29.7.0",
++    "@types/jest": "^29.5.11",
+     "@types/node": "^20",
+     "@types/react": "^18",
+     "@types/react-dom": "^18",
+     "eslint": "^8",
+     "eslint-config-next": "14.2.15",
++    "jest": "^29.7.0",
++    "ts-jest": "^29.1.1",
+     "tsx": "^4.19.2",
+     "typescript": "^5",
+     "wait-on": "^8.0.1"
+diff --git a/scripts/evals-runner.ts b/scripts/evals-runner.ts
+index 79f80da..2cd17a1 100644
+--- a/scripts/evals-runner.ts
++++ b/scripts/evals-runner.ts
+@@ -15,7 +15,10 @@
+ import * as fs from 'fs';
+ import * as path from 'path';
+ 
+-const API_URL = process.env.API_URL || 'http://localhost:3000';
++// Support testing both local and production environments
++const API_URL = process.env.API_URL || process.env.VERCEL_URL
++  ? `https://${process.env.VERCEL_URL}`
++  : 'http://localhost:3000';
+ const EVALS_FILE = path.join(process.cwd(), 'data', 'evals', 'test-questions.jsonl');
+ const RESULTS_FILE = path.join(process.cwd(), 'eval-results.json');
+ const SUMMARY_FILE = path.join(process.cwd(), 'eval-summary.txt');
+diff --git a/sentry.server.config.ts b/sentry.server.config.ts
+index 369af16..4533b5b 100644
+--- a/sentry.server.config.ts
++++ b/sentry.server.config.ts
+@@ -29,11 +29,24 @@ Sentry.init({
+ 
+     // Remove breadcrumbs that might contain PII
+     if (event.breadcrumbs) {
+-      event.breadcrumbs = event.breadcrumbs.map((breadcrumb) => ({
+-        ...breadcrumb,
+-        data: breadcrumb.data ? scrubPII(breadcrumb.data) : undefined,
+-        message: breadcrumb.message ? '[REDACTED]' : undefined,
+-      }));
++      event.breadcrumbs = event.breadcrumbs.map((breadcrumb) => {
++        // Only redact messages that might contain sensitive data
++        // Safe messages like "Query received", "Answer generated" are preserved
++        let safeMessage = breadcrumb.message;
++        if (breadcrumb.message) {
++          const sensitivePatterns = /query|password|email|token|secret|key|credential/i;
++          // Redact message content (not category labels) if it matches sensitive patterns
++          if (breadcrumb.category !== 'rag' && sensitivePatterns.test(breadcrumb.message)) {
++            safeMessage = '[REDACTED]';
++          }
++        }
++
++        return {
++          ...breadcrumb,
++          data: breadcrumb.data ? scrubPII(breadcrumb.data) : undefined,
++          message: safeMessage,
++        };
++      });
+     }
+ 
+     return event;
