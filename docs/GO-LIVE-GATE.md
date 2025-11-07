@@ -24,7 +24,7 @@ This checklist ensures the RAG system is production-ready with all security, pri
 - [ ] **Rate Limiting**
   - [ ] Rate limiter tested (10 req/min/IP)
   - [ ] 429 responses return correct `Retry-After` header
-  - [ ] Upstash Redis configured OR fallback token bucket tested
+- [ ] Upstash Redis configured (fallback token bucket is dev-only)
   - [ ] Rate limit bypasses configured for monitoring/health checks
 
 - [ ] **HTTPS**

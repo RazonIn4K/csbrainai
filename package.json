@@ -12,6 +12,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "test:vitest": "vitest run",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
@@ -34,6 +35,7 @@
     "ts-jest": "^29.1.1",
     "tsx": "^4.19.2",
     "typescript": "^5",
+    "vitest": "^2.0.5",
     "wait-on": "^8.0.1"
   },
   "optionalDependencies": {

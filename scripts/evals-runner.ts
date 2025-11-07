@@ -240,6 +240,16 @@ ${summary.overall_quality < 0.5 ? '❌ SEVERE REGRESSION DETECTED' : '✅ Qualit
   fs.writeFileSync(SUMMARY_FILE, summaryText);
   console.log(`✅ Summary written to: ${SUMMARY_FILE}`);
 
+  if (summary.overall_quality < 0.5) {
+    console.error('\n❌ Quality threshold not met (requires >= 50%).');
+    console.error('Artifacts saved at:');
+    console.error(`  - ${RESULTS_FILE}`);
+    console.error(`  - ${SUMMARY_FILE}`);
+    process.exit(1);
+  }
+
+  console.log('\n✅ Quality threshold met (>= 50%).');
+
   // Print summary
   console.log('\n' + summaryText);
 

@@ -405,6 +405,7 @@ Performance:
 - [ ] All 20 questions succeeded (Successful: 20, Failed: 0)
 - [ ] Average quality score > 50%
 - [ ] No severe regressions detected
+- [ ] If quality < 50%, script exits non-zero and artifacts remain at `eval-results.json` and `eval-summary.txt`
 
 ### Inspect Evaluation Results
 
@@ -511,7 +512,7 @@ await new Promise(resolve => setTimeout(resolve, 500)); // 500ms
 **Solution**:
 1. Check middleware is applied: Look for `middleware.ts` in logs
 2. Verify IP extraction: Add debug logs to `getIdentifier()`
-3. Check Upstash config or fallback logic
+3. Confirm Upstash credentials are set. Token bucket fallback is dev-only; production should fail closed without Redis.
 
 ---
 
