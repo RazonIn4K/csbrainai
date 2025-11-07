@@ -285,7 +285,7 @@ User receives generic error:
 
 Applied in `middleware.ts`:
 - **Limit**: 10 requests/min/IP
-- **Strategy**: Upstash Redis (primary), Token Bucket (fallback)
+- **Strategy**: Upstash Redis (primary). Token Bucket fallback **dev-only**; production fails closed if Redis is misconfigured.
 - **Response**: HTTP 429 with `Retry-After` header
 
 ### 2. Input Validation

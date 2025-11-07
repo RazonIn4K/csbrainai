@@ -59,13 +59,12 @@ export async function POST(request: NextRequest) {
 
     // Log hashed query to Sentry (safe for PII compliance)
     Sentry.addBreadcrumb({
-      category: 'rag',
+      category: 'rag.query',
       message: 'Query received',
       level: 'info',
       data: {
         q_hash: qHash,
         q_len: qLen,
-        timestamp: new Date().toISOString(),
       },
     });
 
@@ -100,16 +99,14 @@ export async function POST(request: NextRequest) {
       similarity: doc.similarity,
     }));
 
-    // Log successful completion (with privacy-safe metadata)
+    // Log successful completion (privacy-safe metadata only)
     Sentry.addBreadcrumb({
-      category: 'rag',
+      category: 'rag.answer',
       message: 'Answer generated',
       level: 'info',
       data: {
         q_hash: qHash,
-        citations_count: citations.length,
-        tokens_used: tokensUsed,
-        duration_ms: Date.now() - startTime,
+        q_len: qLen,
       },
     });
 

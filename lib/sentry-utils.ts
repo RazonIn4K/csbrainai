@@ -26,7 +26,8 @@ export function hashPII(data: string): { hash: string; length: number } {
 
 /**
  * Scrub PII from Sentry event data.
- * Replaces sensitive fields with hashed versions.
+ * Replaces sensitive fields with hashed versions and normalizes query-like fields
+ * to `{ q_hash, q_len }` for consistent privacy-safe logging.
  */
 export function scrubPII(data: any): any {
   if (typeof data === 'string') {
@@ -42,10 +43,9 @@ export function scrubPII(data: any): any {
   if (data && typeof data === 'object') {
     const scrubbed: any = {};
     for (const [key, value] of Object.entries(data)) {
-      // Scrub known sensitive fields
+      const lowerKey = key.toLowerCase();
+      const queryLikeFields = ['query', 'prompt', 'question'];
       const sensitiveFields = [
-        'query',
-        'prompt',
         'message',
         'email',
         'password',
@@ -54,7 +54,10 @@ export function scrubPII(data: any): any {
         'cookie',
       ];
 
-      if (sensitiveFields.some((field) => key.toLowerCase().includes(field))) {
+      if (queryLikeFields.some((field) => lowerKey.includes(field)) && typeof value === 'string') {
+        const { hash, length } = hashPII(value);
+        scrubbed[key] = { q_hash: hash, q_len: length };
+      } else if (sensitiveFields.some((field) => lowerKey.includes(field))) {
         if (typeof value === 'string') {
           const { hash, length } = hashPII(value);
           scrubbed[key] = { _scrubbed: true, hash, length };

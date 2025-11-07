@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { rateLimit } from './lib/rate-limiter';
+import { rateLimit, RateLimitUnavailableError, RATE_LIMIT_RULE } from './lib/rate-limiter';
 
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next();
@@ -43,12 +43,18 @@ export async function middleware(request: NextRequest) {
       // Add rate limit headers
       response.headers.set('X-RateLimit-Limit', rateLimitResult.limit.toString());
       response.headers.set('X-RateLimit-Remaining', rateLimitResult.remaining.toString());
+
       if (rateLimitResult.reset) {
-        response.headers.set('X-RateLimit-Reset', rateLimitResult.reset.toString());
+        const resetSeconds = Math.ceil(rateLimitResult.reset / 1000);
+        response.headers.set('X-RateLimit-Reset', resetSeconds.toString());
       }
 
       // Block request if rate limit exceeded
       if (!rateLimitResult.success) {
+        const retryAfterSeconds = rateLimitResult.reset
+          ? Math.max(1, Math.ceil((rateLimitResult.reset - Date.now()) / 1000))
+          : Math.ceil(RATE_LIMIT_RULE.windowMs / 1000);
+
         return new NextResponse(
           JSON.stringify({
             error: 'Too Many Requests',
@@ -58,7 +64,7 @@ export async function middleware(request: NextRequest) {
             status: 429,
             headers: {
               'Content-Type': 'application/json',
-              'Retry-After': '60',
+              'Retry-After': retryAfterSeconds.toString(),
               ...Object.fromEntries(response.headers),
             },
           }
@@ -66,7 +72,22 @@ export async function middleware(request: NextRequest) {
       }
     } catch (error) {
       console.error('Rate limiting error:', error);
-      // Continue on rate limiter failure (fail open)
+
+      if (error instanceof RateLimitUnavailableError) {
+        return new NextResponse(
+          JSON.stringify({
+            error: 'Service Unavailable',
+            message: 'Rate limiting temporarily unavailable. Please try again later.',
+          }),
+          {
+            status: 503,
+            headers: {
+              'Content-Type': 'application/json',
+              ...Object.fromEntries(response.headers),
+            },
+          }
+        );
+      }
     }
   }
 

@@ -9,6 +9,7 @@
     "lint": "next lint",
     "ingest": "tsx scripts/ingest.ts",
     "evals": "tsx scripts/evals-runner.ts",
+    "test": "vitest run",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
@@ -27,6 +28,7 @@
     "eslint-config-next": "14.2.15",
     "tsx": "^4.19.2",
     "typescript": "^5",
+    "vitest": "^2.0.5",
     "wait-on": "^8.0.1"
   },
   "optionalDependencies": {
