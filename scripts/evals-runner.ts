@@ -15,7 +15,10 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-const API_URL = process.env.API_URL || 'http://localhost:3000';
+// Support testing both local and production environments
+const API_URL = process.env.API_URL || process.env.VERCEL_URL
+  ? `https://${process.env.VERCEL_URL}`
+  : 'http://localhost:3000';
 const EVALS_FILE = path.join(process.cwd(), 'data', 'evals', 'test-questions.jsonl');
 const RESULTS_FILE = path.join(process.cwd(), 'eval-results.json');
 const SUMMARY_FILE = path.join(process.cwd(), 'eval-summary.txt');

@@ -126,6 +126,14 @@ export async function rateLimit(
   } catch (error) {
     // Fall back to token bucket
     console.warn('Upstash rate limiter unavailable, using token bucket fallback');
+
+    // In production, log to monitoring (this fallback won't work properly in serverless)
+    if (process.env.NODE_ENV === 'production') {
+      console.error('⚠️ WARNING: In-memory rate limiter active in production. ' +
+        'This will not work correctly across distributed serverless instances. ' +
+        'Please configure Upstash Redis for production use.');
+    }
+
     const result = tokenBucketLimit(identifier);
     return {
       success: result.success,
