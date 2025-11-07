@@ -1,0 +1,20 @@
+{"id":"q1","question":"What is RAG?","expected_keywords":["retrieval","generation","augmented"],"category":"concept"}
+{"id":"q2","question":"How does vector similarity search work?","expected_keywords":["vector","embedding","similarity","cosine"],"category":"technical"}
+{"id":"q3","question":"What is the purpose of embeddings?","expected_keywords":["representation","semantic","vector"],"category":"concept"}
+{"id":"q4","question":"What database is used for vector storage?","expected_keywords":["supabase","postgres","pgvector"],"category":"architecture"}
+{"id":"q5","question":"What model generates the embeddings?","expected_keywords":["openai","text-embedding","1536"],"category":"technical"}
+{"id":"q6","question":"How is PII protected in this system?","expected_keywords":["hash","hmac","privacy","scrub"],"category":"security"}
+{"id":"q7","question":"What is the rate limit for API requests?","expected_keywords":["10","minute","requests"],"category":"security"}
+{"id":"q8","question":"What observability tool is used?","expected_keywords":["sentry"],"category":"architecture"}
+{"id":"q9","question":"How are duplicate chunks prevented?","expected_keywords":["chunk_hash","unique","deduplication"],"category":"technical"}
+{"id":"q10","question":"What LLM is used for generating answers?","expected_keywords":["gpt-4o-mini","openai"],"category":"technical"}
+{"id":"q11","question":"What is the embedding dimension?","expected_keywords":["1536"],"category":"technical"}
+{"id":"q12","question":"What security headers are implemented?","expected_keywords":["csp","content-security-policy","x-frame"],"category":"security"}
+{"id":"q13","question":"How does the ingestion process work?","expected_keywords":["chunk","embed","hash","upsert"],"category":"architecture"}
+{"id":"q14","question":"What file formats are supported for knowledge?","expected_keywords":["markdown","md","txt"],"category":"technical"}
+{"id":"q15","question":"What is the query hash used for?","expected_keywords":["privacy","logging","pii"],"category":"security"}
+{"id":"q16","question":"How many citations are returned?","expected_keywords":["5","top"],"category":"technical"}
+{"id":"q17","question":"What is the minimum similarity threshold?","expected_keywords":["0.5","threshold"],"category":"technical"}
+{"id":"q18","question":"What type of index is used for vectors?","expected_keywords":["ivfflat","cosine"],"category":"technical"}
+{"id":"q19","question":"How often do evaluations run?","expected_keywords":["nightly","daily","2 am"],"category":"operations"}
+{"id":"q20","question":"What happens when rate limit is exceeded?","expected_keywords":["429","too many requests","blocked"],"category":"security"}
