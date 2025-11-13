@@ -221,7 +221,7 @@ curl -X POST http://localhost:3000/api/answer \
 - [ ] `q_hash` is a 64-character hex string
 - [ ] `q_len` matches query length (12)
 
-### Test Invalid Query
+### Test Invalid Query (Empty)
 
 ```bash
 curl -X POST http://localhost:3000/api/answer \
@@ -232,7 +232,32 @@ curl -X POST http://localhost:3000/api/answer \
 **Expected Output** (400):
 ```json
 {
-  "error": "Invalid request. \"query\" field is required and must be a string."
+  "error": {
+    "type": "validation_error",
+    "message": "Query cannot be empty",
+    "field": "query",
+    "details": [...]
+  }
+}
+```
+
+### Test Query Too Short
+
+```bash
+curl -X POST http://localhost:3000/api/answer \
+  -H "Content-Type: application/json" \
+  -d '{"query": "ab"}'
+```
+
+**Expected Output** (400):
+```json
+{
+  "error": {
+    "type": "validation_error",
+    "message": "Query must be at least 3 characters",
+    "field": "query",
+    "details": [...]
+  }
 }
 ```
 
@@ -247,7 +272,12 @@ curl -X POST http://localhost:3000/api/answer \
 **Expected Output** (400):
 ```json
 {
-  "error": "Query too long. Maximum length is 1000 characters."
+  "error": {
+    "type": "validation_error",
+    "message": "Query must be at most 1000 characters",
+    "field": "query",
+    "details": [...]
+  }
 }
 ```
 

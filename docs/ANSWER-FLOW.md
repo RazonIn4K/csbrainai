@@ -70,6 +70,7 @@ The `/api/answer` endpoint provides RAG-powered question answering with privacy-
 
 **Constraints**:
 - `query` must be a non-empty string
+- Minimum length: 3 characters (after trim)
 - Maximum length: 1000 characters
 - Required field
 
@@ -103,18 +104,57 @@ The `/api/answer` endpoint provides RAG-powered question answering with privacy-
 
 ### Response (Error)
 
+All error responses follow a structured format for programmatic handling:
+
+**Validation Error (400)**:
 ```json
 {
-  "error": "Too Many Requests",
-  "message": "Rate limit exceeded. Please try again later."
+  "error": {
+    "type": "validation_error",
+    "message": "Query must be at least 3 characters",
+    "field": "query",
+    "details": [...]
+  }
+}
+```
+
+**Rate Limit Error (429)**:
+```json
+{
+  "error": {
+    "type": "rate_limited",
+    "message": "Too many requests. Please try again later."
+  },
+  "retryAfterSeconds": 45
+}
+```
+
+**Internal Error (500)**:
+```json
+{
+  "error": {
+    "type": "internal_error",
+    "message": "Failed to generate answer. Please try again later."
+  }
+}
+```
+
+**Service Unavailable (503)**:
+```json
+{
+  "error": {
+    "type": "service_unavailable",
+    "message": "Service temporarily unavailable. Please try again later."
+  }
 }
 ```
 
 **HTTP Status Codes**:
 - `200`: Success
-- `400`: Invalid request (missing/invalid query)
-- `429`: Rate limit exceeded
+- `400`: Invalid request (missing/invalid query, validation errors)
+- `429`: Rate limit exceeded (10 req/min/IP)
 - `500`: Internal server error
+- `503`: Service unavailable (rate limiter unavailable)
 
 ## Implementation Details
 
@@ -290,15 +330,34 @@ Applied in `middleware.ts`:
 
 ### 2. Input Validation
 
+**Validation using Zod schema**:
 ```typescript
-if (!query || typeof query !== 'string') {
-  return res.status(400).json({ error: 'Invalid request' });
-}
+const AnswerRequestSchema = z.object({
+  query: z.string()
+    .min(1, 'Query cannot be empty')
+    .transform(s => s.trim())
+    .refine(s => s.length >= 3, {
+      message: 'Query must be at least 3 characters'
+    })
+    .refine(s => s.length <= 1000, {
+      message: 'Query must be at most 1000 characters'
+    })
+});
 
-if (query.length > 1000) {
-  return res.status(400).json({ error: 'Query too long' });
+const parseResult = AnswerRequestSchema.safeParse(body);
+if (!parseResult.success) {
+  return NextResponse.json(
+    createValidationError(firstError.message, firstError.path[0]),
+    { status: 400 }
+  );
 }
 ```
+
+**Validation rules**:
+- Required string field
+- Minimum 3 characters (after trim)
+- Maximum 1000 characters
+- Invalid JSON returns 400 with clear error message
 
 ### 3. PII Scrubbing
 

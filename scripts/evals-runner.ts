@@ -148,7 +148,7 @@ function evaluateResponse(
     qualityScore += 0.1;
   }
 
-  return { quality_score: Math.min(qualityScore, 1.0), has_expected_keywords };
+  return { quality_score: Math.min(qualityScore, 1.0), has_expected_keywords: hasExpectedKeywords };
 }
 
 /**
