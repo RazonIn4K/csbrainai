@@ -3,27 +3,19 @@ import * as Sentry from '@sentry/nextjs';
 import { generateEmbedding, generateAnswer } from '@/lib/openai';
 import { searchDocuments } from '@/lib/supabase';
 import { hashQuery } from '@/lib/crypto-utils';
+import { rateLimit, RateLimitUnavailableError } from '@/lib/rate-limiter';
+import {
+  AnswerRequestSchema,
+  type AnswerResponse,
+  type Citation,
+  createValidationError,
+  createRateLimitError,
+  createInternalError,
+  createServiceUnavailableError,
+} from '@/lib/schema';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-
-interface AnswerRequest {
-  query: string;
-}
-
-interface Citation {
-  source_url: string;
-  content: string;
-  similarity: number;
-}
-
-interface AnswerResponse {
-  answer: string;
-  citations: Citation[];
-  q_hash: string;
-  q_len: number;
-  tokensUsed?: number;
-}
 
 /**
  * POST /api/answer
@@ -35,26 +27,76 @@ export async function POST(request: NextRequest) {
   const startTime = Date.now();
 
   try {
-    // Parse request body
-    const body: AnswerRequest = await request.json();
-    const { query } = body;
+    // Step 0: Rate limiting (critical for public endpoints)
+    try {
+      const rateLimitResult = await rateLimit(request);
 
-    // Validate query
-    if (!query || typeof query !== 'string') {
+      if (!rateLimitResult.success) {
+        // Calculate retry-after in seconds
+        const retryAfterMs = rateLimitResult.reset ? rateLimitResult.reset - Date.now() : 60000;
+        const retryAfterSeconds = Math.ceil(retryAfterMs / 1000);
+
+        Sentry.addBreadcrumb({
+          category: 'rate-limit',
+          message: 'Rate limit exceeded',
+          level: 'warning',
+          data: {
+            limit: rateLimitResult.limit,
+            remaining: rateLimitResult.remaining,
+            retryAfter: retryAfterSeconds,
+          },
+        });
+
+        return NextResponse.json(createRateLimitError(retryAfterSeconds), {
+          status: 429,
+          headers: {
+            'Retry-After': String(retryAfterSeconds),
+            'X-RateLimit-Limit': String(rateLimitResult.limit),
+            'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+            'X-RateLimit-Reset': String(rateLimitResult.reset || Date.now() + retryAfterMs),
+          },
+        });
+      }
+    } catch (error) {
+      // Handle rate limiter unavailability
+      if (error instanceof RateLimitUnavailableError) {
+        console.error('Rate limiter unavailable (production fail-closed):', error);
+        Sentry.captureException(error, {
+          tags: {
+            endpoint: '/api/answer',
+            critical: 'true',
+          },
+        });
+
+        return NextResponse.json(createServiceUnavailableError(), { status: 503 });
+      }
+      // Re-throw unexpected errors
+      throw error;
+    }
+
+    // Step 1: Parse and validate request body with Zod
+    let body: any;
+    try {
+      body = await request.json();
+    } catch (parseError) {
+      return NextResponse.json(createValidationError('Invalid JSON in request body'), {
+        status: 400,
+      });
+    }
+
+    const parseResult = AnswerRequestSchema.safeParse(body);
+
+    if (!parseResult.success) {
+      const firstError = parseResult.error.errors[0];
       return NextResponse.json(
-        { error: 'Invalid request. "query" field is required and must be a string.' },
+        createValidationError(firstError.message, firstError.path[0] as string, parseResult.error.errors),
         { status: 400 }
       );
     }
 
-    if (query.length > 1000) {
-      return NextResponse.json(
-        { error: 'Query too long. Maximum length is 1000 characters.' },
-        { status: 400 }
-      );
-    }
+    const { query } = parseResult.data;
 
-    // Hash query for privacy-safe logging (NEVER log the raw query)
+    // Step 2: Hash query for privacy-safe logging (NEVER log the raw query)
     const { hash: qHash, length: qLen } = hashQuery(query);
 
     // Log hashed query to Sentry (safe for PII compliance)
@@ -68,10 +110,10 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Step 1: Generate embedding for the query
+    // Step 3: Generate embedding for the query
     const queryEmbedding = await generateEmbedding(query);
 
-    // Step 2: Vector search for similar documents
+    // Step 4: Vector search for similar documents
     const matchedDocs = await searchDocuments(queryEmbedding, {
       matchThreshold: 0.5, // Minimum similarity score
       matchCount: 5, // Top 5 results
@@ -86,13 +128,13 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Step 3: Build context from matched documents
+    // Step 5: Build context from matched documents
     const context = matchedDocs.map((doc) => doc.content);
 
-    // Step 4: Generate answer using LLM with context
+    // Step 6: Generate answer using LLM with context
     const { answer, tokensUsed } = await generateAnswer(query, context);
 
-    // Step 5: Prepare citations
+    // Step 7: Prepare citations
     const citations: Citation[] = matchedDocs.map((doc) => ({
       source_url: doc.source_url,
       content: doc.content.substring(0, 200) + '...', // Truncate for response
@@ -107,6 +149,9 @@ export async function POST(request: NextRequest) {
       data: {
         q_hash: qHash,
         q_len: qLen,
+        citations_count: citations.length,
+        tokens_used: tokensUsed,
+        duration_ms: Date.now() - startTime,
       },
     });
 
@@ -132,13 +177,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json(
-      {
-        error: 'Internal server error',
-        message: 'Failed to generate answer. Please try again later.',
-      },
-      { status: 500 }
-    );
+    return NextResponse.json(createInternalError(), { status: 500 });
   }
 }
 
@@ -151,15 +190,38 @@ export async function GET() {
     endpoint: '/api/answer',
     method: 'POST',
     description: 'RAG-powered question answering with privacy-first logging',
+    rateLimit: {
+      requests: 10,
+      window: '1 minute',
+      identifier: 'IP address',
+    },
     request: {
-      query: 'string (required, max 1000 characters)',
+      query: 'string (required, min 3 chars, max 1000 chars)',
     },
     response: {
-      answer: 'string',
-      citations: 'Citation[]',
-      q_hash: 'string (HMAC-SHA256 hash of query)',
-      q_len: 'number (length of query)',
-      tokensUsed: 'number (optional)',
+      success: {
+        answer: 'string',
+        citations: 'Citation[]',
+        q_hash: 'string (HMAC-SHA256 hash of query)',
+        q_len: 'number (length of query)',
+        tokensUsed: 'number (optional)',
+      },
+      error: {
+        error: {
+          type: 'validation_error | rate_limited | internal_error | service_unavailable',
+          message: 'string',
+          field: 'string (optional)',
+          details: 'any (optional)',
+        },
+        retryAfterSeconds: 'number (only for rate_limited)',
+      },
+    },
+    statusCodes: {
+      200: 'Success',
+      400: 'Validation error',
+      429: 'Rate limit exceeded',
+      500: 'Internal server error',
+      503: 'Service unavailable (rate limiter down)',
     },
     privacy: 'Only query hash and length are logged. Raw queries are never stored.',
   });
