@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
-import { generateEmbedding, generateAnswer } from '@/lib/openai';
+import { generateEmbedding, generateAnswer, CHAT_MODEL } from '@/lib/openai';
 import { searchDocuments } from '@/lib/supabase';
 import { hashQuery } from '@/lib/crypto-utils';
 import { rateLimit, RateLimitUnavailableError } from '@/lib/rate-limiter';
+import { createMetricsTracker, type RagMetricsTracker } from '@/lib/metrics';
+import { evaluatePromptForInjection, shouldBlockPrompt } from '@/lib/prompt-guard';
+import { estimateLlmCost } from '@/lib/cost-estimator';
 import {
   AnswerRequestSchema,
   type AnswerResponse,
@@ -25,6 +28,7 @@ export const dynamic = 'force-dynamic';
  */
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
+  let metrics: RagMetricsTracker | null = null;
 
   try {
     // Step 0: Rate limiting (critical for public endpoints)
@@ -99,6 +103,9 @@ export async function POST(request: NextRequest) {
     // Step 2: Hash query for privacy-safe logging (NEVER log the raw query)
     const { hash: qHash, length: qLen } = hashQuery(query);
 
+    const tracker = createMetricsTracker({ queryHash: qHash });
+    metrics = tracker;
+
     // Log hashed query to Sentry (safe for PII compliance)
     Sentry.addBreadcrumb({
       category: 'rag.query',
@@ -110,16 +117,35 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Step 3: Generate embedding for the query
+    // Step 3: Prompt-injection guard hook
+    const promptVerdict = evaluatePromptForInjection(query);
+    if (promptVerdict.flagged && shouldBlockPrompt(promptVerdict)) {
+      tracker.markFailure('prompt_guard_blocked');
+      tracker.finalize();
+      return NextResponse.json(
+        createValidationError('Potential prompt-injection detected. Please rephrase your question.'),
+        { status: 400 }
+      );
+    }
+
+    // Step 4: Generate embedding for the query
     const queryEmbedding = await generateEmbedding(query);
 
-    // Step 4: Vector search for similar documents
-    const matchedDocs = await searchDocuments(queryEmbedding, {
+    // Step 5: Vector search for similar documents
+    const searchOptions = {
       matchThreshold: 0.5, // Minimum similarity score
       matchCount: 5, // Top 5 results
-    });
+    } as const;
+
+    const matchedDocs = await tracker.measureVectorSearch(() =>
+      searchDocuments(queryEmbedding, searchOptions)
+    );
+
+    tracker.setChunkCount(matchedDocs.length);
 
     if (matchedDocs.length === 0) {
+      tracker.markFailure('no_matches');
+      tracker.finalize();
       return NextResponse.json<AnswerResponse>({
         answer: "I don't have enough information in my knowledge base to answer that question.",
         citations: [],
@@ -128,13 +154,22 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Step 5: Build context from matched documents
+    // Step 6: Build context from matched documents
     const context = matchedDocs.map((doc) => doc.content);
 
-    // Step 6: Generate answer using LLM with context
-    const { answer, tokensUsed } = await generateAnswer(query, context);
+    // Step 7: Generate answer using LLM with context
+    const { answer, tokensUsed, usage } = await generateAnswer(query, context);
+    tracker.setTokensUsed(tokensUsed);
 
-    // Step 7: Prepare citations
+    const costEstimate = await estimateLlmCost({
+      model: CHAT_MODEL,
+      promptTokens: usage?.promptTokens,
+      completionTokens: usage?.completionTokens,
+      totalTokens: usage?.totalTokens ?? tokensUsed,
+    });
+    tracker.setCostUsd(costEstimate.costUsd);
+
+    // Step 8: Prepare citations
     const citations: Citation[] = matchedDocs.map((doc) => ({
       source_url: doc.source_url,
       content: doc.content.substring(0, 200) + '...', // Truncate for response
@@ -152,6 +187,7 @@ export async function POST(request: NextRequest) {
         citations_count: citations.length,
         tokens_used: tokensUsed,
         duration_ms: Date.now() - startTime,
+        cost_usd: costEstimate.costUsd ?? null,
       },
     });
 
@@ -163,9 +199,17 @@ export async function POST(request: NextRequest) {
       tokensUsed,
     };
 
+    tracker.markSuccess();
+    tracker.finalize();
+
     return NextResponse.json(response);
   } catch (error: any) {
     console.error('Error in /api/answer:', error);
+
+    if (metrics) {
+      metrics.markFailure(error?.message ?? 'unhandled_error');
+      metrics.finalize();
+    }
 
     // Log error to Sentry (PII scrubbing handled by beforeSend hook)
     Sentry.captureException(error, {

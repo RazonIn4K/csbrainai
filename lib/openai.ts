@@ -52,10 +52,16 @@ export async function generateEmbeddings(texts: string[]): Promise<number[][]> {
 /**
  * Generate answer using GPT-4o-mini with RAG context
  */
+export interface AnswerUsage {
+  promptTokens?: number;
+  completionTokens?: number;
+  totalTokens?: number;
+}
+
 export async function generateAnswer(
   query: string,
   context: string[]
-): Promise<{ answer: string; tokensUsed: number }> {
+): Promise<{ answer: string; tokensUsed: number; usage?: AnswerUsage }> {
   try {
     const systemPrompt = `You are a helpful AI assistant. Answer questions based on the provided context.
 If the answer cannot be found in the context, say "I don't have enough information to answer that question."
@@ -82,8 +88,15 @@ Answer:`;
 
     const answer = response.choices[0]?.message?.content || 'No answer generated';
     const tokensUsed = response.usage?.total_tokens || 0;
+    const usage = response.usage
+      ? {
+          promptTokens: response.usage.prompt_tokens ?? undefined,
+          completionTokens: response.usage.completion_tokens ?? undefined,
+          totalTokens: response.usage.total_tokens ?? undefined,
+        }
+      : undefined;
 
-    return { answer, tokensUsed };
+    return { answer, tokensUsed, usage };
   } catch (error) {
     console.error('Error generating answer:', error);
     throw new Error('Failed to generate answer');

@@ -8,6 +8,11 @@
     "start": "next start",
     "lint": "next lint",
     "ingest": "tsx scripts/ingest.ts",
+    "finance:ingest": "tsx examples/pdf_finance_assistant/ingest.ts",
+    "finance:ask": "tsx examples/pdf_finance_assistant/ask.ts",
+    "policy:ingest": "tsx examples/policy_compliance_assistant/ingest.ts",
+    "policy:ask": "tsx examples/policy_compliance_assistant/ask.ts",
+    "metrics:summary": "tsx scripts/metrics-summary.ts",
     "evals": "tsx scripts/evals-runner.ts",
     "test": "jest",
     "test:watch": "jest --watch",
@@ -22,7 +27,9 @@
     "openai": "^4.67.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "zod": "^3.25.76"
+    "zod": "^3.25.76",
+    "pdf-parse": "^1.1.1",
+    "ai-utils": "^1.0.0"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
