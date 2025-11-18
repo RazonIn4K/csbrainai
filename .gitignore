@@ -40,3 +40,6 @@ sentry.properties
 # IDE
 .vscode
 .idea
+
+# Snyk Security Extension - AI Rules (auto-generated)
+.windsurf/rules/snyk_rules.md
