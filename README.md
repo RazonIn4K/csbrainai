@@ -76,6 +76,78 @@ CSBrainAI is an enterprise-grade Retrieval Augmented Generation (RAG) system wit
 
 ---
 
+**This repo is part of my Upwork portfolio for GPT research agents with Notion integration, privacy-first RAG systems, and enterprise knowledge assistants.**
+
+---
+
+## 🚀 Quick Demo
+
+**Prerequisites:**
+- Node.js 20+
+- Supabase account (for vector storage)
+- OpenAI API key
+- Sentry account (optional but recommended)
+
+**Run the demo:**
+```bash
+# 1. Install dependencies
+npm install
+
+# 2. Set up environment variables
+cp .env.example .env
+# Edit .env with your SUPABASE_URL, SUPABASE_ANON_KEY, OPENAI_API_KEY
+
+# 3. Run database migration (in Supabase SQL Editor)
+# Copy contents of supabase/migrations/001_rag_schema.sql and execute
+
+# 4. Ingest sample knowledge
+npm run ingest
+
+# 5. Start development server
+npm run dev
+
+# 6. Test the API (in another terminal)
+curl -X POST http://localhost:3000/api/answer \
+  -H "Content-Type: application/json" \
+  -d '{"query":"What is RAG?"}'
+```
+
+**Expected Output:**
+```json
+{
+  "answer": "RAG (Retrieval Augmented Generation) is an AI architecture...",
+  "citations": [
+    {
+      "source_url": "file://sample-1.md#chunk-0",
+      "content": "RAG (Retrieval Augmented Generation) is...",
+      "similarity": 0.87
+    }
+  ],
+  "q_hash": "a3f2b9c1d4e5f6a7b8c9d0e1f2a3b4c5...",
+  "q_len": 12,
+  "tokensUsed": 456
+}
+```
+
+**What this proves:**
+- Privacy-first RAG system (queries are hashed, never stored raw)
+- Vector search with Supabase + pgvector
+- Structured citations with similarity scores
+- Perfect for GPT research agent jobs where clients need Notion integration + status updates with privacy guarantees
+
+**Alternative demo (no setup needed):**
+```bash
+# Run unit tests to see functionality
+npm test
+```
+
+**Next Steps:**
+- See `docs/ANSWER-FLOW.md` for API architecture
+- See `docs/upwork/UPWORK_GPT_NOTION_AGENT.md` for Upwork summary
+- See `TEST_NOTES.md` for manual test scenarios
+
+---
+
 ## 🚀 Quick Start
 
 ### Prerequisites
