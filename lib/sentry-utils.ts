@@ -65,7 +65,11 @@ export function scrubPII(data: any): any {
           scrubbed[key] = '[SCRUBBED]';
         }
       } else {
-        scrubbed[key] = scrubPII(value);
+        if (value && typeof value === 'object') {
+          scrubbed[key] = scrubPII(value); // Recurse only on objects/arrays
+        } else {
+          scrubbed[key] = value; // Preserve primitives
+        }
       }
     }
     return scrubbed;

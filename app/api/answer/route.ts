@@ -159,7 +159,10 @@ export async function POST(request: NextRequest) {
 
     // Step 7: Generate answer using LLM with context
     const { answer, tokensUsed, usage } = await generateAnswer(query, context);
-    tracker.setTokensUsed(tokensUsed);
+    if (!answer) {
+      throw new Error('LLM failed to generate an answer');
+    }
+    tracker.setTokensUsed(tokensUsed ?? 0);
 
     const costEstimate = await estimateLlmCost({
       model: CHAT_MODEL,
