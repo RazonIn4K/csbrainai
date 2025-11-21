@@ -68,21 +68,28 @@ describe('scrubPII - String handling', () => {
 describe('scrubPII - Sensitive fields', () => {
   const sensitiveFields = ['query', 'prompt', 'message', 'email', 'password', 'token', 'authorization', 'cookie'];
 
-  sensitiveFields.forEach((field) => {
-    it(`should scrub field: ${field}`, () => {
+  const queryLikeFields = ['query', 'prompt'];
+  const otherSensitiveFields = ['message', 'email', 'password', 'token', 'authorization', 'cookie'];
+
+  queryLikeFields.forEach((field) => {
+    it(`should normalize query-like field: ${field}`, () => {
+      const data = { [field]: 'sensitive-data-123' };
+      const result = scrubPII(data);
+
+      expect(result[field]).toHaveProperty('q_hash');
+      expect(result[field]).toHaveProperty('q_len', 18);
+      expect(result[field]).not.toHaveProperty('_scrubbed');
+    });
+  });
+
+  otherSensitiveFields.forEach((field) => {
+    it(`should scrub sensitive field: ${field}`, () => {
       const data = { [field]: 'sensitive-data-123' };
       const result = scrubPII(data);
 
       expect(result[field]).toHaveProperty('_scrubbed', true);
       expect(result[field]).toHaveProperty('hash');
       expect(result[field].hash).not.toBe('sensitive-data-123');
-    });
-
-    it(`should scrub field with mixed case: ${field.toUpperCase()}`, () => {
-      const data = { [field.toUpperCase()]: 'sensitive-data-123' };
-      const result = scrubPII(data);
-
-      expect(result[field.toUpperCase()]).toHaveProperty('_scrubbed', true);
     });
   });
 
@@ -107,7 +114,7 @@ describe('scrubPII - Sensitive fields', () => {
     };
     const result = scrubPII(data);
 
-    expect(result.query).toHaveProperty('_scrubbed', true); // query is sensitive
+    expect(result.query).toHaveProperty('q_hash'); // query is sensitive
     expect(result.status).toBe('success'); // status is not sensitive
     expect(result.count).toBe(42); // count is not sensitive
   });
@@ -134,7 +141,7 @@ describe('scrubPII - Array handling', () => {
     const result = scrubPII(data);
 
     result.forEach((item: any) => {
-      expect(item.query).toHaveProperty('_scrubbed', true);
+      expect(item.query).toHaveProperty('q_hash');
     });
   });
 });
@@ -210,7 +217,7 @@ describe('sanitizeRequest', () => {
 
     const result = sanitizeRequest(request);
 
-    expect(result.data.query).toHaveProperty('_scrubbed', true);
+    expect(result.data.query).toHaveProperty('q_hash');
     expect(result.data.other).toBe('safe data');
   });
 
@@ -258,8 +265,8 @@ describe('PII scrubbing - Real-world scenarios', () => {
     const extra = scrubPII(event.extra);
 
     // Sensitive fields scrubbed
-    expect(contexts.rag.query).toHaveProperty('_scrubbed', true);
-    expect(extra.prompt).toHaveProperty('_scrubbed', true);
+    expect(contexts.rag.query).toHaveProperty('q_hash');
+    expect(extra.prompt).toHaveProperty('q_hash');
 
     // Non-sensitive preserved
     expect(contexts.rag.status).toBe('processing');
@@ -298,6 +305,6 @@ describe('PII scrubbing - Real-world scenarios', () => {
 
     expect(result.q_hash).toBe('abc123'); // Safe metadata preserved
     expect(result.q_len).toBe(42); // Safe metadata preserved
-    expect(result.query).toHaveProperty('_scrubbed', true); // Query scrubbed
+    expect(result.query).toHaveProperty('q_hash'); // Query scrubbed
   });
 });

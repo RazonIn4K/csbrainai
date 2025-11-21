@@ -104,7 +104,7 @@ cp .env.example .env
 npm run ingest
 
 # 5. Start development server
-npm run dev
+make demo
 
 # 6. Test the API (in another terminal)
 curl -X POST http://localhost:3000/api/answer \
@@ -129,17 +129,28 @@ curl -X POST http://localhost:3000/api/answer \
 }
 ```
 
-**What this proves:**
-- Privacy-first RAG system (queries are hashed, never stored raw)
-- Vector search with Supabase + pgvector
-- Structured citations with similarity scores
-- Perfect for GPT research agent jobs where clients need Notion integration + status updates with privacy guarantees
-
 **Alternative demo (no setup needed):**
 ```bash
 # Run unit tests to see functionality
-npm test
+make test-demo
 ```
+
+---
+
+## 💡 Where this fits for clients
+
+This repository is a perfect starting point for clients who need:
+
+- **A private internal knowledge base:** Answer questions from employees about internal documentation without sending sensitive data to third-party services.
+- **A customer-facing chatbot:** Power a chatbot with your existing documentation, such as FAQs, product manuals, and support articles.
+- **A lead generation tool:** Engage potential customers by answering their questions and guiding them through your sales funnel.
+
+---
+
+**Loom Demos:**
+
+- [Coming Soon] Full Demo Video
+- [Coming Soon] Technical Deep Dive
 
 **Next Steps:**
 - See `docs/ANSWER-FLOW.md` for API architecture

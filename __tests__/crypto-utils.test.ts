@@ -141,7 +141,6 @@ describe('Hash collision resistance', () => {
       'aaa',
       '123',
       '1234',
-      'test' + 'test',
       'testtest',
     ];
 
