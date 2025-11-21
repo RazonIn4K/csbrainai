@@ -99,6 +99,8 @@ We built a **RAG (Retrieval-Augmented Generation)** pipeline.
 ## 9. Links & Artifacts
 
 - **Demo Script:** [rag_demo.py](./rag_demo.py)
+- **Chat Interface:**
+  ![RAG Chat Interface](./assets/rag_chat_interface.png)
 - **Architecture Diagram:** _(See assets)_
 
 ---
