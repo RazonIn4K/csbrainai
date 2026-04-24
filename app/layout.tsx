@@ -2,8 +2,9 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'CSBrainAI - RAG-Powered Q&A',
-  description: 'Privacy-first RAG system with Supabase, pgvector, and Sentry',
+  title: 'CSBrainAI - Private RAG Assistant',
+  description:
+    'A privacy-first computer science RAG assistant with citations, query hashing, and guarded telemetry.',
 };
 
 export default function RootLayout({

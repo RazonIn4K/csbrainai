@@ -12,17 +12,33 @@ interface CostEstimateResult {
   error?: string;
 }
 
-let estimatorPromise: Promise<((input: Record<string, unknown>) => any) | null> | null = null;
+type CostEstimator = (input: Record<string, unknown>) => unknown | Promise<unknown>;
+
+let estimatorPromise: Promise<CostEstimator | null> | null = null;
+
+type OptionalEstimatorModule = {
+  estimate_llm_cost?: unknown;
+  default?: {
+    estimate_llm_cost?: unknown;
+  };
+  ai_utils?: {
+    estimate_llm_cost?: unknown;
+  };
+};
 
 async function loadEstimator() {
   if (!estimatorPromise) {
-    estimatorPromise = import('ai-utils')
+    const runtimeImport = new Function('specifier', 'return import(specifier)') as (
+      specifier: string
+    ) => Promise<OptionalEstimatorModule>;
+
+    estimatorPromise = runtimeImport('ai-utils')
       .then((mod) => {
         const fn =
-          (mod as any)?.estimate_llm_cost ||
-          (mod as any)?.default?.estimate_llm_cost ||
-          (mod as any)?.ai_utils?.estimate_llm_cost;
-        return typeof fn === 'function' ? fn : null;
+          mod?.estimate_llm_cost ||
+          mod?.default?.estimate_llm_cost ||
+          mod?.ai_utils?.estimate_llm_cost;
+        return typeof fn === 'function' ? (fn as CostEstimator) : null;
       })
       .catch(() => null);
   }

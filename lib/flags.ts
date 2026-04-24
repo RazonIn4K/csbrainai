@@ -1,11 +1,12 @@
 import * as configcat from "configcat-js";
 
-const logger = {
+const appLogger = {
   info: (msg: string) => console.log(`[ConfigCat] ${msg}`),
   error: (msg: string) => console.error(`[ConfigCat] ${msg}`),
   warn: (msg: string) => console.warn(`[ConfigCat] ${msg}`),
-  log: (msg: string) => console.log(`[ConfigCat] ${msg}`),
 };
+
+const configCatLogger = configcat.createConsoleLogger(configcat.LogLevel.Warn);
 
 let configCatClient: configcat.IConfigCatClient | null = null;
 
@@ -13,12 +14,12 @@ export const getConfigCatClient = () => {
   if (!configCatClient) {
     const sdkKey = process.env.NEXT_PUBLIC_CONFIGCAT_SDK_KEY;
     if (!sdkKey) {
-      logger.warn("NEXT_PUBLIC_CONFIGCAT_SDK_KEY is not set. Feature flags will default to false.");
+      appLogger.warn("NEXT_PUBLIC_CONFIGCAT_SDK_KEY is not set. Feature flags will default to false.");
       return null;
     }
     configCatClient = configcat.getClient(sdkKey, configcat.PollingMode.AutoPoll, {
       pollIntervalSeconds: 60,
-      logger: logger,
+      logger: configCatLogger,
     });
   }
   return configCatClient;
@@ -32,7 +33,7 @@ export const getFeatureFlag = async (key: string, defaultValue: boolean = false,
   try {
     return await client.getValueAsync(key, defaultValue, user);
   } catch (error) {
-    logger.error(`Error fetching flag ${key}: ${error}`);
+    appLogger.error(`Error fetching flag ${key}: ${error}`);
     return defaultValue;
   }
 };

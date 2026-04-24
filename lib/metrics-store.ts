@@ -1,9 +1,8 @@
 import fs from 'fs';
-import path from 'path';
 import type { RagMetricSample } from './metrics';
 
 const MAX_SAMPLES = 200;
-const LOG_PATH = process.env.RAG_METRICS_LOG_PATH || path.join(process.cwd(), '.rag-metrics-log.jsonl');
+const LOG_PATH = '/tmp/csbrainai-rag-metrics-log.jsonl';
 const MAX_LOG_LINES = Number(process.env.RAG_METRICS_MAX_LINES || '500');
 const DISABLE_DISK_LOG = process.env.RAG_METRICS_DISABLE_DISK === '1';
 const fsPromises = fs.promises;

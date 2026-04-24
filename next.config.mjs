@@ -3,11 +3,6 @@ import { withSentryConfig } from '@sentry/nextjs';
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  experimental: {
-    serverActions: {
-      bodySizeLimit: '2mb',
-    },
-  },
 };
 
 // Sentry configuration options
@@ -19,7 +14,6 @@ const sentryWebpackPluginOptions = {
   // Upload source maps in production builds only
   widenClientFileUpload: true,
   hideSourceMaps: true,
-  disableLogger: true,
 };
 
 export default withSentryConfig(nextConfig, sentryWebpackPluginOptions);

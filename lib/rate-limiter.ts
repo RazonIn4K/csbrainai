@@ -79,13 +79,22 @@ function getIdentifier(request: NextRequest): string {
     return forwardedFor.split(',')[0].trim();
   }
 
+  const vercelForwardedFor = request.headers.get('x-vercel-forwarded-for');
+  if (vercelForwardedFor) {
+    return vercelForwardedFor.split(',')[0].trim();
+  }
+
+  const cloudflareIp = request.headers.get('cf-connecting-ip');
+  if (cloudflareIp) {
+    return cloudflareIp;
+  }
+
   const realIp = request.headers.get('x-real-ip');
   if (realIp) {
     return realIp;
   }
 
-  // Fallback to connection IP
-  return request.ip || 'unknown';
+  return 'unknown';
 }
 
 /**
