@@ -1,9 +1,27 @@
 import OpenAI from 'openai';
 
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+export class OpenAIConfigurationError extends Error {
+  constructor() {
+    super('OpenAI API key is not configured');
+    this.name = 'OpenAIConfigurationError';
+  }
+}
+
+let openai: OpenAI | null = null;
+
+function getOpenAIClient(): OpenAI {
+  const apiKey = process.env.OPENAI_API_KEY;
+
+  if (!apiKey) {
+    throw new OpenAIConfigurationError();
+  }
+
+  if (!openai) {
+    openai = new OpenAI({ apiKey });
+  }
+
+  return openai;
+}
 
 export const EMBEDDING_MODEL = 'text-embedding-3-small';
 export const EMBEDDING_DIMENSIONS = 1536;
@@ -16,7 +34,7 @@ export const CHAT_MODEL = 'gpt-4o-mini';
  */
 export async function generateEmbedding(text: string): Promise<number[]> {
   try {
-    const response = await openai.embeddings.create({
+    const response = await getOpenAIClient().embeddings.create({
       model: EMBEDDING_MODEL,
       input: text,
       encoding_format: 'float',
@@ -24,6 +42,10 @@ export async function generateEmbedding(text: string): Promise<number[]> {
 
     return response.data[0].embedding;
   } catch (error) {
+    if (error instanceof OpenAIConfigurationError) {
+      throw error;
+    }
+
     console.error('Error generating embedding:', error);
     throw new Error('Failed to generate embedding');
   }
@@ -36,7 +58,7 @@ export async function generateEmbedding(text: string): Promise<number[]> {
  */
 export async function generateEmbeddings(texts: string[]): Promise<number[][]> {
   try {
-    const response = await openai.embeddings.create({
+    const response = await getOpenAIClient().embeddings.create({
       model: EMBEDDING_MODEL,
       input: texts,
       encoding_format: 'float',
@@ -44,6 +66,10 @@ export async function generateEmbeddings(texts: string[]): Promise<number[][]> {
 
     return response.data.map((item) => item.embedding);
   } catch (error) {
+    if (error instanceof OpenAIConfigurationError) {
+      throw error;
+    }
+
     console.error('Error generating embeddings:', error);
     throw new Error('Failed to generate embeddings');
   }
@@ -76,7 +102,7 @@ Question: ${query}
 
 Answer:`;
 
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAIClient().chat.completions.create({
       model: CHAT_MODEL,
       messages: [
         { role: 'system', content: systemPrompt },
@@ -98,6 +124,10 @@ Answer:`;
 
     return { answer, tokensUsed, usage };
   } catch (error) {
+    if (error instanceof OpenAIConfigurationError) {
+      throw error;
+    }
+
     console.error('Error generating answer:', error);
     throw new Error('Failed to generate answer');
   }

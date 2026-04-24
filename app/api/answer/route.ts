@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
-import { generateEmbedding, generateAnswer, CHAT_MODEL } from '@/lib/openai';
+import {
+  generateEmbedding,
+  generateAnswer,
+  CHAT_MODEL,
+  OpenAIConfigurationError,
+} from '@/lib/openai';
 import { searchDocuments } from '@/lib/supabase';
 import { hashQuery } from '@/lib/crypto-utils';
 import { rateLimit, RateLimitUnavailableError } from '@/lib/rate-limiter';
@@ -209,6 +214,17 @@ export async function POST(request: NextRequest) {
     if (metrics) {
       metrics.markFailure(error?.message ?? 'unhandled_error');
       metrics.finalize();
+    }
+
+    if (error instanceof OpenAIConfigurationError) {
+      Sentry.captureException(error, {
+        tags: {
+          endpoint: '/api/answer',
+          config: 'missing_openai_key',
+        },
+      });
+
+      return NextResponse.json(createServiceUnavailableError(), { status: 503 });
     }
 
     // Log error to Sentry (PII scrubbing handled by beforeSend hook)
