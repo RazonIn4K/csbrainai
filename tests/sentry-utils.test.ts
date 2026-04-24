@@ -39,7 +39,7 @@ describe('scrubPII', () => {
       _scrubbed: true,
       length: payload.metadata.nested.password.length,
     });
-    expect(scrubbed.safe).toMatchObject({ _scrubbed: true, length: payload.safe.length });
+    expect(scrubbed.safe).toBe(payload.safe);
   });
 });
 

@@ -31,7 +31,6 @@ export function hashPII(data: string): { hash: string; length: number } {
  */
 export function scrubPII(data: any): any {
   if (typeof data === 'string') {
-    // Hash string data
     const { hash, length } = hashPII(data);
     return { _scrubbed: true, hash, length };
   }
@@ -64,8 +63,10 @@ export function scrubPII(data: any): any {
         } else {
           scrubbed[key] = '[SCRUBBED]';
         }
-      } else {
+      } else if (Array.isArray(value) || (value && typeof value === 'object')) {
         scrubbed[key] = scrubPII(value);
+      } else {
+        scrubbed[key] = value;
       }
     }
     return scrubbed;
