@@ -49,5 +49,8 @@
   "optionalDependencies": {
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.37.0"
+  },
+  "overrides": {
+    "postcss": "^8.5.10"
   }
 }
