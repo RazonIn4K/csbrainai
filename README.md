@@ -3,7 +3,7 @@
 **Privacy-First RAG System** powered by Supabase + pgvector, OpenAI, and Sentry
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
-[![Next.js](https://img.shields.io/badge/Next.js-14-black.svg)](https://nextjs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black.svg)](https://nextjs.org/)
 [![Supabase](https://img.shields.io/badge/Supabase-pgvector-green.svg)](https://supabase.com/)
 [![Sentry](https://img.shields.io/badge/Sentry-L5%20Tool-purple.svg)](https://sentry.io/)
 
@@ -64,14 +64,14 @@ CSBrainAI is an enterprise-grade Retrieval Augmented Generation (RAG) system wit
 
 | Component | Technology | Purpose |
 |-----------|-----------|---------|
-| **Framework** | Next.js 14 (App Router) | Full-stack React framework |
+| **Framework** | Next.js 16 (App Router) | Full-stack React framework |
 | **Language** | TypeScript 5 | Type safety |
 | **Database** | Supabase (PostgreSQL) | Vector storage with pgvector |
 | **Embeddings** | OpenAI text-embedding-3-small | 1536-dim vectors |
 | **LLM** | OpenAI gpt-4o-mini | Answer generation |
 | **Observability** | Sentry | Error tracking (L5 tool) |
 | **Rate Limiting** | Upstash Redis / Token Bucket | API protection |
-| **Security** | Middleware | CSP, HSTS, headers |
+| **Security** | Next.js Proxy | CSP, HSTS, headers |
 | **CI/CD** | GitHub Actions | Nightly evaluations |
 
 ---
