@@ -21,6 +21,7 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.rag-metrics-log.jsonl
 
 # local env files
 .env*.local
