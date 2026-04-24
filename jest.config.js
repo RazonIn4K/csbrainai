@@ -8,7 +8,7 @@ module.exports = {
     'lib/**/*.ts',
     '!lib/**/*.d.ts',
   ],
-  coverageThresholds: {
+  coverageThreshold: {
     global: {
       branches: 80,
       functions: 80,
