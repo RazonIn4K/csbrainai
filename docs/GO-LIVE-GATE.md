@@ -183,7 +183,8 @@ This checklist ensures the RAG system is production-ready with all security, pri
   - [ ] Deployment rollback tested
 
 - [ ] **DNS & CDN**
-  - [ ] Domain configured (csbrainai.com)
+  - [x] Public Vercel alias configured (csbrainai.vercel.app)
+  - [ ] Custom domain configured, if needed
   - [ ] CDN enabled (Vercel/Cloudflare)
   - [ ] DDoS protection enabled
   - [ ] Geographic routing (if applicable)
