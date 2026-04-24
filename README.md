@@ -490,7 +490,7 @@ MIT License - see [LICENSE](./LICENSE) for details.
 
 - **Documentation**: [docs/](./docs)
 - **Issues**: [GitHub Issues](https://github.com/RazonIn4K/csbrainai/issues)
-- **Security**: Email security@csbrainai.com for vulnerabilities
+- **Security**: Report vulnerabilities through GitHub Security Advisories for this repository.
 
 ---
 
