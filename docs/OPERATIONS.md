@@ -84,6 +84,34 @@ name will literally distinguish `HASH_SALT … required` vs
 `OpenAIConfigurationError` vs a 401), then do step **3 (Vercel env vars)
 before step 2 (Supabase)**.
 
+## Remote diagnosis v3 (2026-06-10) — response shape rules out one suspect
+
+The route maps different failures to **different HTTP responses**
+(`app/api/answer/route.ts:219-240`), which lets an outside probe discriminate:
+
+| Failure | Path through the code | Response |
+| --- | --- | --- |
+| `OPENAI_API_KEY` **absent** | `OpenAIConfigurationError` is caught explicitly | **503 `service_unavailable`** |
+| `HASH_SALT` absent | plain `Error` from `generateHMAC` (`lib/crypto-utils.ts:12-14`) → generic handler | **500 `internal_error`** |
+| OpenAI key **present but invalid/expired** | OpenAI 401 → rethrown as `Failed to generate embedding` → generic handler | **500 `internal_error`** |
+| Supabase env missing or project paused | only reachable **after** a successful embedding call (`lib/supabase.ts` builds clients lazily per call) | 500, but slower |
+
+Production returns **500 `internal_error`** — so a *fully absent* OpenAI key is
+**ruled out** (it would 503). Combined with the v2 timing evidence, the suspect
+list narrows to exactly two:
+
+1. **`HASH_SALT` unset in Vercel production env** — the only path to the
+   observed 500 with *zero* external calls; best fit for the fastest probe
+   (0.44s including network round-trip).
+2. **`OPENAI_API_KEY` present but invalid/expired** — a 401 round-trip is fast
+   (~200–400ms) and lands in the same generic 500; fits the slower probes.
+
+Checklist effect: in step 3, look at **`HASH_SALT` first**; step 4 (validate
+the OpenAI key independently) cleanly separates the two if Sentry is not
+conclusive. Sentry remains the fastest discriminator: the captured exception
+message will read `HASH_SALT environment variable is required` or
+`Failed to generate embedding`.
+
 ## Recovery checklist (requires owner credentials — cannot be done by an agent)
 
 1. **Read the real stack trace first**: check Sentry for events from
