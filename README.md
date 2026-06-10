@@ -1,6 +1,6 @@
 # CSBrainAI
 
-**Privacy-First RAG System** powered by Supabase + pgvector, OpenAI, and Sentry
+**Privacy-first RAG workbench for technical teams** — Supabase + pgvector, OpenAI, and Sentry
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-16-black.svg)](https://nextjs.org/)
@@ -11,7 +11,7 @@
 
 ## 🎯 Overview
 
-CSBrainAI is an enterprise-grade Retrieval Augmented Generation (RAG) system with **privacy-first architecture**. User queries are **never stored in raw form** — only HMAC-SHA256 hashes and lengths are logged, ensuring complete privacy while maintaining full observability.
+CSBrainAI is a **privacy-first RAG workbench** for technical teams that need internal knowledge assistants. User queries are **never stored in raw form** — only HMAC-SHA256 hashes and lengths are logged, ensuring complete privacy while maintaining full observability. Answers come with citations and similarity scores, backed by an automated eval harness and operational guardrails.
 
 ### Key Features
 
@@ -76,10 +76,6 @@ CSBrainAI is an enterprise-grade Retrieval Augmented Generation (RAG) system wit
 
 ---
 
-**This repo is part of my Upwork portfolio for GPT research agents with Notion integration, privacy-first RAG systems, and enterprise knowledge assistants.**
-
----
-
 ## 🚀 Quick Demo
 
 **Prerequisites:**
@@ -133,7 +129,7 @@ curl -X POST http://localhost:3000/api/answer \
 - Privacy-first RAG system (queries are hashed, never stored raw)
 - Vector search with Supabase + pgvector
 - Structured citations with similarity scores
-- Perfect for GPT research agent jobs where clients need Notion integration + status updates with privacy guarantees
+- Operational guardrails (rate limiting, PII scrubbing, hashed-query telemetry) fit for internal knowledge assistants
 
 **Alternative demo (no setup needed):**
 ```bash
@@ -143,7 +139,6 @@ npm test
 
 **Next Steps:**
 - See `docs/ANSWER-FLOW.md` for API architecture
-- See `docs/upwork/UPWORK_GPT_NOTION_AGENT.md` for Upwork summary
 - See `TEST_NOTES.md` for manual test scenarios
 
 ---
@@ -494,4 +489,4 @@ MIT License - see [LICENSE](./LICENSE) for details.
 
 ---
 
-**Built with ❤️ for privacy-first AI applications**
+Built by [David Ortiz](https://davidtiz.com).
