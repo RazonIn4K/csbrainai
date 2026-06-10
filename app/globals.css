@@ -536,9 +536,168 @@ button {
   background: var(--amber);
 }
 
+/* Demo lane pages (/examples) */
+.page-intro {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+  padding: 40px 0 32px;
+}
+
+.breadcrumb {
+  margin-bottom: 18px;
+  color: var(--ink-muted);
+  font-size: 13px;
+}
+
+.breadcrumb a:hover {
+  color: var(--ink);
+}
+
+.page-intro h1 {
+  margin-top: 14px;
+  max-width: 840px;
+  font-size: 48px;
+  line-height: 1.05;
+}
+
+.lane-facts {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.65fr);
+  gap: 32px;
+  align-items: start;
+  width: min(1180px, 100%);
+  margin: 0 auto 28px;
+}
+
+.fact-card h2 {
+  color: var(--amber);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.fact-card p {
+  margin: 10px 0 22px;
+  color: var(--ink-muted);
+  font-size: 17px;
+  line-height: 1.65;
+}
+
+.lane-card {
+  position: relative;
+  display: block;
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.lane-card:hover {
+  border-color: rgba(32, 199, 182, 0.45);
+  transform: translateY(-2px);
+}
+
+.lane-cta {
+  color: var(--accent);
+  font-weight: 800;
+}
+
+.band-note {
+  margin-top: 12px;
+  color: var(--ink-muted);
+  line-height: 1.6;
+}
+
+.code-block {
+  padding: 18px 20px;
+  border: 1px solid rgba(238, 246, 255, 0.14);
+  border-radius: 6px;
+  background: var(--bg-soft);
+  color: var(--ink);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 14px;
+  line-height: 1.7;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.demo-section .code-block {
+  border-color: var(--line-strong);
+  background: #10171f;
+}
+
+.transcript {
+  display: grid;
+  gap: 16px;
+}
+
+.transcript-pending {
+  max-width: 760px;
+  color: var(--text-muted);
+  line-height: 1.65;
+}
+
+.transcript-question {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.transcript-answer {
+  max-width: 760px;
+  color: var(--text);
+  font-size: 17px;
+  line-height: 1.7;
+}
+
+.transcript-stamp {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.run-band {
+  display: grid;
+  gap: 16px;
+  width: min(1180px, 100%);
+  margin: 28px auto 0;
+  padding: 32px;
+  border: 1px solid rgba(238, 246, 255, 0.12);
+  border-radius: 8px;
+  background: rgba(247, 249, 252, 0.06);
+}
+
+.source-note {
+  color: var(--ink-muted);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  clip: rect(0 0 0 0);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
 @media (max-width: 900px) {
   .site-shell {
     padding-top: 20px;
+  }
+
+  .lane-facts {
+    grid-template-columns: 1fr;
+  }
+
+  .page-intro h1 {
+    font-size: 38px;
+  }
+
+  .run-band {
+    padding: 24px;
   }
 
   .hero-section,
