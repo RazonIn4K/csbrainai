@@ -216,10 +216,17 @@ cost guardrails (per-day token/cost cap on /api/answer)
 
 ## Done criteria for this repo
 
-- [ ] README opens as product positioning; Upwork framing confined to docs/upwork/.
-- [ ] CLAUDE.md and docs/BRAND-BOUNDARY.md exist.
-- [ ] /examples/policy, /examples/finance, /examples/cs live with real captured runs.
-- [ ] /privacy-model, /evals, /architecture live; /evals shows recent real scores.
-- [ ] Homepage leads with "private RAG workbench for technical teams" and the
-      policy lane.
-- [ ] Gates green: lint, type-check, jest + vitest, build, evals ≥ threshold.
+- [x] README opens as product positioning; Upwork framing confined to docs/upwork/. (PR #15)
+- [x] CLAUDE.md and docs/BRAND-BOUNDARY.md exist. (PR #15)
+- [x] /examples/policy, /examples/finance, /examples/cs live (PR #16) — **real
+      captured runs still pending**: transcript slots in app/examples/lanes.ts
+      render an honest pending state until the production incident
+      (docs/OPERATIONS.md) is resolved and real CLI runs are pasted in.
+- [x] /privacy-model, /evals, /architecture live (PR #18) — **/evals shows a
+      pending-scores state**, not real scores, until the nightly pipeline has a
+      successful run again.
+- [x] Homepage leads with "private RAG workbench for technical teams" and the
+      policy lane. (PR #19)
+- [ ] Gates green: lint, type-check, jest + vitest, build all pass locally and
+      on Vercel; **evals ≥ threshold is blocked** on the open production
+      incident (docs/OPERATIONS.md).
