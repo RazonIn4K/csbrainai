@@ -71,8 +71,8 @@ export default function LaneDetail({ lane }: { lane: Lane }) {
             </p>
             <p className="transcript-answer">{lane.transcript.answer}</p>
             <div className="citation-list">
-              {lane.transcript.citations.map((citation) => (
-                <div className="citation-item" key={citation.source}>
+              {lane.transcript.citations.map((citation, index) => (
+                <div className="citation-item" key={`${citation.source}-${index}`}>
                   <div className="citation-meta">
                     <span className="citation-source">{citation.source}</span>
                     <span>score {citation.similarity.toFixed(3)}</span>
@@ -88,10 +88,10 @@ export default function LaneDetail({ lane }: { lane: Lane }) {
           <div className="transcript">
             <p className="transcript-pending">
               No captured run is published for this lane yet. This slot only ever shows verbatim
-              output from the command below — nothing on this page is synthetic. Run it locally
-              with credentials and a corpus in place:
+              output from a real run — nothing on this page is synthetic. Use the commands in
+              the &ldquo;Run it locally&rdquo; section below with credentials and a corpus in
+              place.
             </p>
-            <pre className="code-block">{lane.runLocally.join('\n')}</pre>
           </div>
         )}
       </section>
