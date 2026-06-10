@@ -683,6 +683,54 @@ button {
   white-space: nowrap;
 }
 
+/* Trust console pages */
+.status-dot-danger {
+  background: var(--danger);
+  box-shadow: 0 0 0 5px rgba(194, 65, 58, 0.18);
+}
+
+.page-intro code {
+  color: var(--ink);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.9em;
+}
+
+.trust-grid {
+  margin-top: 28px;
+}
+
+.flow-list {
+  display: grid;
+  gap: 12px;
+  list-style: none;
+  counter-reset: flow;
+}
+
+.flow-list li {
+  position: relative;
+  padding-left: 34px;
+  color: var(--ink-muted);
+  line-height: 1.6;
+  counter-increment: flow;
+}
+
+.flow-list li::before {
+  content: counter(flow);
+  position: absolute;
+  left: 0;
+  top: 1px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 800;
+}
+
 @media (max-width: 900px) {
   .site-shell {
     padding-top: 20px;

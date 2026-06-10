@@ -46,6 +46,27 @@ export default function ExamplesIndex() {
           <li>A 20-question eval corpus scores answer quality nightly in CI.</li>
         </ul>
       </section>
+
+      <section className="proof-grid trust-grid" aria-label="Trust console">
+        <Link className="proof-item lane-card" href="/privacy-model">
+          <p>Trust console</p>
+          <h2>Privacy model</h2>
+          <span>What gets logged, what never does, and the threat model behind the hashing.</span>
+          <span className="lane-cta">View →</span>
+        </Link>
+        <Link className="proof-item lane-card" href="/evals">
+          <p>Trust console</p>
+          <h2>Evals</h2>
+          <span>The 20-question corpus, the scoring weights, and the nightly regression gate.</span>
+          <span className="lane-cta">View →</span>
+        </Link>
+        <Link className="proof-item lane-card" href="/architecture">
+          <p>Trust console</p>
+          <h2>Architecture</h2>
+          <span>pgvector retrieval, the rag_docs schema, and the request lifecycle end to end.</span>
+          <span className="lane-cta">View →</span>
+        </Link>
+      </section>
     </main>
   );
 }
