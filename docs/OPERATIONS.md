@@ -56,6 +56,34 @@ January. Treat "production worked" as unverified for roughly five months.
 4. CI build failures in January suggest the same secrets are stale in GitHub
    Actions secrets too (the build step there consumes env).
 
+## Remote diagnosis update (2026-06-10) — timing evidence reorders the suspects
+
+Probed production from outside (no credentials needed):
+
+- `POST /api/answer` with a valid query → **500 in 0.44–0.89s total**, three
+  samples, *including* network round-trip. Response body is the sanitized
+  generic error (good PII hygiene, by design).
+- Code-level failure-mode check of the chain (`app/api/answer/route.ts`):
+  - `hashQuery` → `generateHMAC` (`lib/crypto-utils.ts:11-14`) **throws
+    instantly** if `HASH_SALT` is unset — zero external calls.
+  - `generateEmbedding` → `getOpenAIClient` (`lib/openai.ts:13-17`) **throws
+    instantly** if `OPENAI_API_KEY` is unset; an expired key 401s in
+    ~200–400ms.
+  - A paused-Supabase failure can only occur **after** a successful embedding
+    call (~300–800ms of OpenAI latency alone), which would push total response
+    time well above what was observed.
+
+**Conclusion: the 500 almost certainly fires at or before the first external
+call — missing `HASH_SALT`, missing `OPENAI_API_KEY`, or an expired OpenAI
+key. The request very likely never reaches Supabase.** Supabase may *also* be
+paused after five idle months (it still matters for retrieval), but it is not
+the immediate cause of this error.
+
+Practical effect on the checklist below: do step 1 (Sentry — the exception
+name will literally distinguish `HASH_SALT … required` vs
+`OpenAIConfigurationError` vs a 401), then do step **3 (Vercel env vars)
+before step 2 (Supabase)**.
+
 ## Recovery checklist (requires owner credentials — cannot be done by an agent)
 
 1. **Read the real stack trace first**: check Sentry for events from
