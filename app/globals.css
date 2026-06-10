@@ -699,6 +699,40 @@ button {
   margin-top: 28px;
 }
 
+.proof-grid-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.band-heading {
+  width: min(1180px, 100%);
+  margin: 18px auto 20px;
+}
+
+.band-heading h2 {
+  margin-top: 8px;
+  color: var(--ink);
+  font-size: 32px;
+  line-height: 1.1;
+}
+
+.site-footer {
+  padding: 28px 20px;
+  border-top: 1px solid rgba(238, 246, 255, 0.1);
+  background: var(--bg);
+  color: var(--ink-muted);
+  font-size: 14px;
+  text-align: center;
+}
+
+.site-footer a {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.site-footer a:hover {
+  color: var(--amber);
+}
+
 .flow-list {
   display: grid;
   gap: 12px;
