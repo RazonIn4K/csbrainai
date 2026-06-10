@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import AnswerDemo from '@/components/AnswerDemo';
 
 const proofPoints = [
@@ -43,6 +44,9 @@ export default function Home() {
             <a className="button-secondary" href="#safeguards">
               View safeguards
             </a>
+            <Link className="button-secondary" href="/examples">
+              Explore demo lanes
+            </Link>
           </div>
         </div>
 
