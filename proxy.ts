@@ -35,8 +35,15 @@ export async function proxy(request: NextRequest) {
     response.headers.set(key, value);
   });
 
+  // Routes that call rateLimit() themselves own their quota; skipping them
+  // here keeps one request from consuming two tokens (proxy + route)
+  const selfLimitedPaths = ['/api/answer'];
+
   // Apply Rate Limiting to API routes
-  if (request.nextUrl.pathname.startsWith('/api/')) {
+  if (
+    request.nextUrl.pathname.startsWith('/api/') &&
+    !selfLimitedPaths.includes(request.nextUrl.pathname)
+  ) {
     try {
       const rateLimitResult = await rateLimit(request);
 

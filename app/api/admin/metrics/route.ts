@@ -4,12 +4,7 @@ import { getMetricsSummary } from '@/lib/metrics-store';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-function isAuthorized(request: NextRequest): boolean {
-  const token = process.env.METRICS_ADMIN_TOKEN;
-  if (!token) {
-    return true;
-  }
-
+function isAuthorized(request: NextRequest, token: string): boolean {
   const headerValue = request.headers.get('authorization');
   if (!headerValue) {
     return false;
@@ -20,7 +15,16 @@ function isAuthorized(request: NextRequest): boolean {
 }
 
 export async function GET(request: NextRequest) {
-  if (!isAuthorized(request)) {
+  // Fail closed: without a configured token this endpoint must not be public
+  const token = process.env.METRICS_ADMIN_TOKEN;
+  if (!token) {
+    return NextResponse.json(
+      { error: 'Metrics not configured', message: 'METRICS_ADMIN_TOKEN is not set' },
+      { status: 503 }
+    );
+  }
+
+  if (!isAuthorized(request, token)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
