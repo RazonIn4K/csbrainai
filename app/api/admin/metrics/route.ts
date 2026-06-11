@@ -1,26 +1,36 @@
+import { createHash, timingSafeEqual } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { getMetricsSummary } from '@/lib/metrics-store';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-function isAuthorized(request: NextRequest): boolean {
-  const token = process.env.METRICS_ADMIN_TOKEN;
-  if (!token) {
-    return true;
-  }
-
+// Digest both sides so timingSafeEqual gets equal-length buffers and the
+// comparison leaks neither content nor length
+function isAuthorized(request: NextRequest, token: string): boolean {
   const headerValue = request.headers.get('authorization');
   if (!headerValue) {
     return false;
   }
 
   const expectedHeader = `Bearer ${token}`;
-  return headerValue === expectedHeader;
+  const actualDigest = createHash('sha256').update(headerValue).digest();
+  const expectedDigest = createHash('sha256').update(expectedHeader).digest();
+
+  return timingSafeEqual(actualDigest, expectedDigest);
 }
 
 export async function GET(request: NextRequest) {
-  if (!isAuthorized(request)) {
+  // Fail closed: without a configured token this endpoint must not be public
+  const token = process.env.METRICS_ADMIN_TOKEN;
+  if (!token) {
+    return NextResponse.json(
+      { error: 'Metrics not configured', message: 'METRICS_ADMIN_TOKEN is not set' },
+      { status: 503 }
+    );
+  }
+
+  if (!isAuthorized(request, token)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

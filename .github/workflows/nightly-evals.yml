@@ -46,6 +46,10 @@ jobs:
           HASH_SALT: ${{ secrets.HASH_SALT }}
           SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
           NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.NEXT_PUBLIC_SENTRY_DSN }}
+          # next start runs NODE_ENV=production, where the rate limiter
+          # requires Upstash and 503s every API call without these
+          UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
+          UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN }}
 
       - name: Run evaluations
         id: evals
