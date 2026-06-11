@@ -1,9 +1,12 @@
+import { createHash, timingSafeEqual } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { getMetricsSummary } from '@/lib/metrics-store';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+// Digest both sides so timingSafeEqual gets equal-length buffers and the
+// comparison leaks neither content nor length
 function isAuthorized(request: NextRequest, token: string): boolean {
   const headerValue = request.headers.get('authorization');
   if (!headerValue) {
@@ -11,7 +14,10 @@ function isAuthorized(request: NextRequest, token: string): boolean {
   }
 
   const expectedHeader = `Bearer ${token}`;
-  return headerValue === expectedHeader;
+  const actualDigest = createHash('sha256').update(headerValue).digest();
+  const expectedDigest = createHash('sha256').update(expectedHeader).digest();
+
+  return timingSafeEqual(actualDigest, expectedDigest);
 }
 
 export async function GET(request: NextRequest) {

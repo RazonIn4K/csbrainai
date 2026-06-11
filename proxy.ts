@@ -2,6 +2,10 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { rateLimit, RateLimitUnavailableError, RATE_LIMIT_RULE } from './lib/rate-limiter';
 
+// Routes that call rateLimit() themselves own their quota; skipping them in
+// the proxy keeps one request from consuming two tokens (proxy + route)
+const SELF_LIMITED_API_PATHS = new Set(['/api/answer']);
+
 export async function proxy(request: NextRequest) {
   const response = NextResponse.next();
 
@@ -35,14 +39,10 @@ export async function proxy(request: NextRequest) {
     response.headers.set(key, value);
   });
 
-  // Routes that call rateLimit() themselves own their quota; skipping them
-  // here keeps one request from consuming two tokens (proxy + route)
-  const selfLimitedPaths = ['/api/answer'];
-
   // Apply Rate Limiting to API routes
   if (
     request.nextUrl.pathname.startsWith('/api/') &&
-    !selfLimitedPaths.includes(request.nextUrl.pathname)
+    !SELF_LIMITED_API_PATHS.has(request.nextUrl.pathname)
   ) {
     try {
       const rateLimitResult = await rateLimit(request);
