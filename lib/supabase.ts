@@ -1,5 +1,17 @@
 import { createClient } from '@supabase/supabase-js';
 
+/**
+ * Thrown when required Supabase env vars are missing. Lets API routes return a
+ * clear 503 (service not configured) instead of an opaque 500, mirroring
+ * OpenAIConfigurationError.
+ */
+export class SupabaseConfigurationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'SupabaseConfigurationError';
+  }
+}
+
 // Types for our RAG documents
 export interface RagDoc {
   id: string;
@@ -30,7 +42,9 @@ export function createServiceClient() {
   const supabaseServiceRole = process.env.SUPABASE_SERVICE_ROLE;
 
   if (!supabaseUrl || !supabaseServiceRole) {
-    throw new Error('Missing Supabase environment variables (SUPABASE_URL or SUPABASE_SERVICE_ROLE)');
+    throw new SupabaseConfigurationError(
+      'Missing Supabase environment variables (SUPABASE_URL or SUPABASE_SERVICE_ROLE)'
+    );
   }
 
   return createClient(supabaseUrl, supabaseServiceRole, {
@@ -50,7 +64,9 @@ export function createAnonClient() {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('Missing Supabase environment variables (SUPABASE_URL or SUPABASE_ANON_KEY)');
+    throw new SupabaseConfigurationError(
+      'Missing Supabase environment variables (SUPABASE_URL or SUPABASE_ANON_KEY)'
+    );
   }
 
   return createClient(supabaseUrl, supabaseAnonKey);

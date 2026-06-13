@@ -6,7 +6,7 @@ import {
   CHAT_MODEL,
   OpenAIConfigurationError,
 } from '@/lib/openai';
-import { searchDocuments } from '@/lib/supabase';
+import { searchDocuments, SupabaseConfigurationError } from '@/lib/supabase';
 import { hashQuery } from '@/lib/crypto-utils';
 import { rateLimit, RateLimitUnavailableError } from '@/lib/rate-limiter';
 import { createMetricsTracker, type RagMetricsTracker } from '@/lib/metrics';
@@ -221,6 +221,17 @@ export async function POST(request: NextRequest) {
         tags: {
           endpoint: '/api/answer',
           config: 'missing_openai_key',
+        },
+      });
+
+      return NextResponse.json(createServiceUnavailableError(), { status: 503 });
+    }
+
+    if (error instanceof SupabaseConfigurationError) {
+      Sentry.captureException(error, {
+        tags: {
+          endpoint: '/api/answer',
+          config: 'missing_supabase_env',
         },
       });
 
