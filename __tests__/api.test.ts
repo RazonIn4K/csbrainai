@@ -3,7 +3,7 @@ import { NextRequest } from 'next/server';
 import { POST } from '../app/api/answer/route';
 import { generateAnswer, generateEmbedding } from '../lib/openai';
 import { rateLimit } from '../lib/rate-limiter';
-import { searchDocuments } from '../lib/supabase';
+import { searchDocuments, SupabaseConfigurationError } from '../lib/supabase';
 
 process.env.HASH_SALT = 'test-salt-for-testing-only-123456789';
 
@@ -20,6 +20,7 @@ jest.mock('../lib/openai', () => ({
 }));
 
 jest.mock('../lib/supabase', () => ({
+  SupabaseConfigurationError: class SupabaseConfigurationError extends Error {},
   searchDocuments: jest.fn(),
 }));
 
@@ -121,5 +122,35 @@ describe('/api/answer', () => {
       'Test chunk 1',
       'Test chunk 2',
     ]);
+  });
+
+  it('returns 503 (not an opaque 500) when Supabase env is missing', async () => {
+    mockedSearchDocuments.mockRejectedValueOnce(
+      new SupabaseConfigurationError(
+        'Missing Supabase environment variables (SUPABASE_URL or SUPABASE_ANON_KEY)'
+      )
+    );
+
+    const request = new NextRequest('http://localhost/api/answer', {
+      method: 'POST',
+      body: JSON.stringify({ query: 'What is RAG?' }),
+    });
+
+    const response = await POST(request);
+
+    expect(response.status).toBe(503);
+  });
+
+  it('still returns 500 for unexpected (non-configuration) failures', async () => {
+    mockedSearchDocuments.mockRejectedValueOnce(new Error('connection reset'));
+
+    const request = new NextRequest('http://localhost/api/answer', {
+      method: 'POST',
+      body: JSON.stringify({ query: 'What is RAG?' }),
+    });
+
+    const response = await POST(request);
+
+    expect(response.status).toBe(500);
   });
 });
