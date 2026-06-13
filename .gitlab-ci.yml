@@ -1,5 +1,6 @@
 stages:
   - test
+  - dast
 
 workflow:
   rules:
@@ -8,4 +9,16 @@ workflow:
 include:
   - template: Jobs/SAST.gitlab-ci.yml
   - template: Jobs/Secret-Detection.gitlab-ci.yml
-  - template: Jobs/Dependency-Scanning.gitlab-ci.yml
+  - template: Jobs/Dependency-Scanning.v2.gitlab-ci.yml
+  - template: DAST.gitlab-ci.yml
+
+variables:
+  DAST_WEBSITE: "https://csbrainai-git-main-razs-projects-29d4f2e6.vercel.app"
+
+dast:
+  stage: dast
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual
+      allow_failure: true
+    - when: never
