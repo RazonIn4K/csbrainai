@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
 
     // Step 5: Vector search for similar documents
     const searchOptions = {
-      matchThreshold: 0.5, // Minimum similarity score
+      matchThreshold: 0.3, // Higher recall for the small demo corpus
       matchCount: 5, // Top 5 results
     } as const;
 

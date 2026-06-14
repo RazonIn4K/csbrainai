@@ -115,7 +115,7 @@ describe('/api/answer', () => {
     ]);
     expect(mockedGenerateEmbedding).toHaveBeenCalledWith('What is RAG?');
     expect(mockedSearchDocuments).toHaveBeenCalledWith([0.1, 0.2, 0.3], {
-      matchThreshold: 0.5,
+      matchThreshold: 0.3,
       matchCount: 5,
     });
     expect(mockedGenerateAnswer).toHaveBeenCalledWith('What is RAG?', [
