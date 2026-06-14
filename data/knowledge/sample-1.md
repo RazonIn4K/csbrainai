@@ -18,7 +18,7 @@ When a user asks a question:
 - The query is converted to a vector embedding using the same model
 - Vector similarity search finds the most relevant chunks using cosine distance
 - The top 5 most similar chunks are retrieved as context
-- A minimum similarity threshold of 0.5 ensures quality
+- A minimum similarity threshold of 0.2 is used for the small demo corpus; production lanes can tune this higher for stricter precision
 
 ### 3. Generation Phase
 With retrieved context:
