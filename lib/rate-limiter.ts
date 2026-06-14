@@ -73,25 +73,26 @@ setInterval(() => {
  * Get client identifier from request (IP address)
  */
 function getIdentifier(request: NextRequest): string {
-  // Try to get real IP from headers (behind proxy)
-  const forwardedFor = request.headers.get('x-forwarded-for');
-  if (forwardedFor) {
-    return forwardedFor.split(',')[0].trim();
-  }
-
+  // On Vercel, x-vercel-forwarded-for and x-real-ip are set by the platform and
+  // cannot be spoofed by the client — prefer them so the rate-limit key is
+  // unforgeable. The raw x-forwarded-for leftmost is client-controllable (a
+  // caller could rotate it to mint unlimited fresh buckets, or pin a victim's
+  // bucket to lock them out), so it is demoted to a non-Vercel fallback only.
+  // cf-connecting-ip is dropped: this app is Vercel-direct, not behind
+  // Cloudflare, so that header was 100% client-spoofable.
   const vercelForwardedFor = request.headers.get('x-vercel-forwarded-for');
   if (vercelForwardedFor) {
     return vercelForwardedFor.split(',')[0].trim();
   }
 
-  const cloudflareIp = request.headers.get('cf-connecting-ip');
-  if (cloudflareIp) {
-    return cloudflareIp;
-  }
-
   const realIp = request.headers.get('x-real-ip');
   if (realIp) {
     return realIp;
+  }
+
+  const forwardedFor = request.headers.get('x-forwarded-for');
+  if (forwardedFor) {
+    return forwardedFor.split(',')[0].trim();
   }
 
   return 'unknown';
