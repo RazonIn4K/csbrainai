@@ -23,7 +23,7 @@ The finance ingest script exposes the chunker – adjust `chunkTranscript` param
 ## 3. Vector Search Parameters
 
 - `matchCount (k)`: default `5`. Increase to `8-10` when answers require cross-document synthesis; reduce to `3` for ultra-low latency chat endpoints.
-- `matchThreshold`: `/api/answer` uses `0.3` for recall on the small demo corpus. Example lanes commonly use `0.5`; raise toward `0.65` when documents are homogenous (e.g., policies) to avoid hallucinations.
+- `matchThreshold`: `/api/answer` uses `0.2` for recall on the small demo corpus. Example lanes commonly use `0.5`; raise toward `0.65` when documents are homogenous (e.g., policies) to avoid hallucinations.
 - Filters: add columns (e.g., `ticker`, `filing_date`) to `rag_docs` and propagate them through `searchDocuments` to hard-scope retrieval for multi-tenant deployments.
 
 ## 4. Latency Measurement & Alerting

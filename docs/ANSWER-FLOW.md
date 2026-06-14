@@ -202,20 +202,20 @@ const queryEmbedding = await generateEmbedding(query);
 
 ```typescript
 const matchedDocs = await searchDocuments(queryEmbedding, {
-  matchThreshold: 0.3,
+  matchThreshold: 0.2,
   matchCount: 5
 });
 ```
 
 **Parameters**:
-- `matchThreshold`: 0.3 (minimum 30% similarity; tuned for recall on the small demo corpus)
+- `matchThreshold`: 0.2 (minimum 20% similarity; tuned for recall on the small demo corpus)
 - `matchCount`: 5 (top 5 results)
 
 **SQL Function**:
 ```sql
 SELECT * FROM match_documents(
   query_embedding,
-  0.3,  -- threshold
+  0.2,  -- threshold
   5     -- count
 );
 ```
