@@ -6,6 +6,9 @@ on:
     - cron: '0 2 * * *'
   workflow_dispatch: # Allow manual trigger
 
+permissions:
+  contents: write
+
 jobs:
   evaluate:
     runs-on: ubuntu-latest
@@ -23,6 +26,35 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Validate evaluation secrets
+        run: |
+          missing=0
+
+          for name in \
+            OPENAI_API_KEY \
+            SUPABASE_URL \
+            SUPABASE_ANON_KEY \
+            HASH_SALT \
+            UPSTASH_REDIS_REST_URL \
+            UPSTASH_REDIS_REST_TOKEN
+          do
+            if [ -z "${!name}" ]; then
+              printf 'Missing required secret: %s\n' "$name"
+              missing=1
+            fi
+          done
+
+          if [ "$missing" -ne 0 ]; then
+            exit 1
+          fi
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          HASH_SALT: ${{ secrets.HASH_SALT }}
+          UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
+          UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN }}
 
       - name: Build Next.js app
         run: npm run build
