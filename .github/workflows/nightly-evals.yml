@@ -15,19 +15,8 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v5
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
       - name: Validate evaluation secrets
+        id: evaluation-secrets
         run: |
           missing=0
 
@@ -46,8 +35,24 @@ jobs:
           done
 
           if [ "$missing" -ne 0 ]; then
+            if [ "${GITHUB_EVENT_NAME}" = "schedule" ]; then
+              echo "::warning::Skipping scheduled evaluations because required secrets are missing."
+              echo "run_evals=false" >> "$GITHUB_OUTPUT"
+              {
+                echo "## Nightly evaluations skipped"
+                echo
+                echo "Required evaluation secrets are not fully configured, so the scheduled run was skipped."
+                echo "Manual workflow dispatches still fail when secrets are missing."
+              } >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+
+            echo "::error::Required evaluation secrets are missing."
+            echo "run_evals=false" >> "$GITHUB_OUTPUT"
             exit 1
           fi
+
+          echo "run_evals=true" >> "$GITHUB_OUTPUT"
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
@@ -56,7 +61,23 @@ jobs:
           UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
           UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN }}
 
+      - name: Checkout code
+        if: ${{ steps.evaluation-secrets.outputs.run_evals == 'true' }}
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        if: ${{ steps.evaluation-secrets.outputs.run_evals == 'true' }}
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        if: ${{ steps.evaluation-secrets.outputs.run_evals == 'true' }}
+        run: npm ci
+
       - name: Build Next.js app
+        if: ${{ steps.evaluation-secrets.outputs.run_evals == 'true' }}
         run: npm run build
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -67,6 +88,7 @@ jobs:
           NEXT_PUBLIC_SENTRY_DSN: ${{ secrets.NEXT_PUBLIC_SENTRY_DSN }}
 
       - name: Start Next.js server
+        if: ${{ steps.evaluation-secrets.outputs.run_evals == 'true' }}
         run: |
           npm run start &
           # Wait for server to be ready
@@ -85,13 +107,14 @@ jobs:
 
       - name: Run evaluations
         id: evals
+        if: ${{ steps.evaluation-secrets.outputs.run_evals == 'true' }}
         run: npm run evals
         env:
           API_URL: http://localhost:3000
 
       - name: Upload evaluation results
         uses: actions/upload-artifact@v6
-        if: always()
+        if: ${{ always() && steps.evaluation-secrets.outputs.run_evals == 'true' }}
         with:
           name: eval-results-${{ github.run_number }}
           path: |
@@ -100,7 +123,7 @@ jobs:
           retention-days: 30
 
       - name: Check for severe regressions
-        if: always()
+        if: ${{ always() && steps.evaluation-secrets.outputs.run_evals == 'true' }}
         run: |
           # Read the evaluation results
           if [ -f eval-results.json ]; then
@@ -124,7 +147,7 @@ jobs:
           fi
 
       - name: Comment on latest commit (on failure)
-        if: failure()
+        if: ${{ failure() && steps.evaluation-secrets.outputs.run_evals == 'true' }}
         uses: actions/github-script@v7
         with:
           script: |

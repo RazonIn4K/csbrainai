@@ -298,6 +298,8 @@ Automated quality testing runs nightly at 2 AM UTC:
 
 ```yaml
 # .github/workflows/nightly-evals.yml
+- Skips scheduled runs when required evaluation secrets are not configured
+- Fails manual dispatches when required evaluation secrets are missing
 - Loads 20 test questions from data/evals/test-questions.jsonl
 - Calls /api/answer for each question
 - Validates response quality, citations, latency
