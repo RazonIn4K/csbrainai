@@ -8,14 +8,19 @@ on:
 jobs:
   mirror:
     runs-on: ubuntu-latest
+    env:
+      GITLAB_TOKEN: ${{ secrets.GITLAB_MIRROR_TOKEN }}
     steps:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
+      - name: Skip mirror when token is not configured
+        if: ${{ env.GITLAB_TOKEN == '' }}
+        run: echo "GITLAB_MIRROR_TOKEN is not configured; skipping GitLab mirror."
+
       - name: Push to GitLab
-        env:
-          GITLAB_TOKEN: ${{ secrets.GITLAB_MIRROR_TOKEN }}
+        if: ${{ env.GITLAB_TOKEN != '' }}
         run: |
           git remote add gitlab "https://oauth2:${GITLAB_TOKEN}@gitlab.com/razonin4k/csbrainai-ci.git"
           git push gitlab main --follow-tags
