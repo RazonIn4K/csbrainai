@@ -1,0 +1,166 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+# CodeRabbit configuration for CSBrainAI.
+# Docs checked: https://docs.coderabbit.ai/reference/configuration (last updated 2026-06-22)
+
+language: "en-US"
+tone_instructions: "Be direct and evidence-based. Prioritize security, privacy, correctness, accessibility, and maintainability over style-only nitpicks."
+
+reviews:
+  profile: "assertive"
+  request_changes_workflow: false
+  high_level_summary: true
+  high_level_summary_in_walkthrough: true
+  review_status: true
+  review_details: true
+  commit_status: true
+  fail_commit_status: true
+  collapse_walkthrough: true
+  changed_files_summary: true
+  sequence_diagrams: true
+  estimate_code_review_effort: true
+  assess_linked_issues: true
+  related_issues: true
+  related_prs: true
+  suggested_labels: true
+  in_progress_fortune: false
+  poem: false
+  enable_prompt_for_ai_agents: true
+  disable_cache: true
+
+  path_filters:
+    - "!**/.maps/**"
+    - "!**/.vercel/**"
+    - "!**/.next/**"
+    - "!**/.next-stale-*/**"
+    - "!**/coverage/**"
+    - "!**/test-reports/**"
+    - "!**/*.log"
+    - "!**/*.tsbuildinfo"
+    - "!**/.rag-metrics-log.jsonl"
+
+  path_instructions:
+    - path: "app/api/**"
+      instructions: |
+        Treat API routes as privacy/security-critical. Verify query handling, prompt-injection guard behavior, rate limiting, raw-query minimization, safe error responses, and no accidental logging of user text, API keys, or Supabase/OpenAI secrets.
+    - path: "lib/crypto-utils.ts"
+      instructions: |
+        Preserve HMAC-SHA256 query hashing semantics. Flag changes that weaken salt handling, determinism, collision resistance assumptions, or test coverage.
+    - path: "lib/sentry-utils.ts"
+      instructions: |
+        Preserve recursive PII scrubbing. Flag changes that allow raw queries, email, phone, tokens, payment data, or credential-like values into Sentry events, breadcrumbs, contexts, or tags.
+    - path: "lib/prompt-guard.ts"
+      instructions: |
+        Review prompt-injection guard logic for bypass regressions, safe normalization, false-positive controls, and tests that cover benign and adversarial inputs.
+    - path: "lib/rate-limiter.ts"
+      instructions: |
+        Verify production deployments use distributed rate limiting, not in-memory-only fallback. Flag fail-open behavior unless it is explicitly documented and monitored.
+    - path: "examples/**"
+      instructions: |
+        Examples must keep credentials out of source, make data handling explicit, and avoid publicizing private documents or realistic sensitive user queries.
+    - path: "docs/**"
+      instructions: |
+        Docs are the source of truth for privacy and architecture. Flag contradictions with CLAUDE.md, raw local paths/secrets, unverified claims, or privacy promises that the code does not satisfy.
+    - path: "__tests__/**"
+      instructions: |
+        Ensure privacy invariants have regression tests: no raw query logging, PII scrubbing, HMAC hashing, rate-limit behavior, prompt-guard behavior, and safe error handling.
+    - path: "tests/**"
+      instructions: |
+        Ensure tests cover RAG quality, citations, privacy invariants, abuse cases, and any changed public claims or demo behavior.
+
+  auto_review:
+    enabled: true
+    auto_incremental_review: true
+    auto_pause_after_reviewed_commits: 5
+    ignore_title_keywords:
+      - "wip"
+      - "dnm"
+      - "do not merge"
+    drafts: false
+
+  finishing_touches:
+    docstrings:
+      enabled: false
+    unit_tests:
+      enabled: false
+    simplify:
+      enabled: false
+
+  pre_merge_checks:
+    override_requested_reviewers_only: false
+    docstrings:
+      mode: "off"
+    title:
+      mode: "warning"
+      requirements: "Use a concise, descriptive title. Prefer conventional prefixes such as feat:, fix:, docs:, security:, privacy:, chore:, or test:."
+    description:
+      mode: "warning"
+    custom_checks:
+      - name: "No secrets or local artifacts"
+        mode: "error"
+        instructions: |
+          Fail if the PR adds or modifies tracked secret-bearing/local files such as .env, .env.*, .vercel/**, .maps/**, private scan reports, tokens, API keys, OAuth secrets, Supabase keys, OpenAI keys, Sentry auth tokens, or Doppler/Vercel credentials.
+          Allow .env.example only when all values are obvious placeholders and no real token-like values appear.
+      - name: "No raw query logging"
+        mode: "error"
+        instructions: |
+          Fail if any changed production code logs, stores, sends to telemetry, or returns raw user queries where only hashed/minimized data should be used.
+          Pass when raw text is used only where required for embeddings/answer generation and privacy docs disclose that external processing boundary.
+      - name: "Privacy claims match code"
+        mode: "warning"
+        instructions: |
+          Fail if public copy or docs promise privacy guarantees stronger than the code enforces, especially around OpenAI processing, Sentry telemetry, Supabase storage, rate limiting, or eval artifacts.
+
+  tools:
+    github-checks:
+      enabled: true
+      timeout_ms: 900000
+    eslint:
+      enabled: true
+    actionlint:
+      enabled: true
+    zizmor:
+      enabled: true
+    gitleaks:
+      enabled: true
+    trufflehog:
+      enabled: true
+    dotenvLint:
+      enabled: true
+    osvScanner:
+      enabled: true
+    semgrep:
+      enabled: true
+    opengrep:
+      enabled: true
+    reactDoctor:
+      enabled: true
+    markdownlint:
+      enabled: true
+    yamllint:
+      enabled: true
+    presidio:
+      enabled: true
+
+chat:
+  art: false
+  allow_non_org_members: false
+  auto_reply: true
+
+knowledge_base:
+  opt_out: false
+  web_search:
+    enabled: true
+  code_guidelines:
+    enabled: true
+    filePatterns:
+      - "**/REVIEW.md"
+  learnings:
+    scope: "local"
+    approval_delay: 3
+  issues:
+    scope: "local"
+  pull_requests:
+    scope: "local"
+  mcp:
+    usage: "disabled"
+  automatic_repository_linking: false
